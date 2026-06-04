@@ -162,60 +162,355 @@
         let currentLevel = 'general'; 
 
         // --- ESTRUCTURA DE DATOS UNIFICADA DE LA UNIVERSIDAD ---
-        let coreData = {
-          "divisions": [
-            { "id": "sec", "name": "Secretarías" },
-            { "id": "fac", "name": "Facultades" },
-            { "id": "inst", "name": "Institutos" },
-            { "id": "lab", "name": "Laboratorios" },
-            { "id": "deptos", "name": "Departamentos Centrales" },
-            { "id": "calidad", "name": "Evaluación y Calidad" }
-          ],
-          "generalNodes": [
-            { "id": "g1", "name": "Rectorado", "dId": "sec", "responsable": "ZOGBI AMADO", "email": "azogbi@atlantida.edu.ar" },
-            { "id": "g2", "name": "Vicerrectorado", "dId": "sec", "responsable": "GIL ALICIA", "email": "alicia.gil@atlantida.edu.ar" },
-            { "id": "sub_sec_acad", "name": "Secretaría Académica", "dId": "sec", "isSubtree": true, "responsable": "LECUNA FLORENCIA", "email": "florencia.lecunanatalizia@atlantida.edu.ar" },
-            { "id": "sub_sec_adm", "name": "Secretaría Administrativa", "dId": "sec", "isSubtree": true },
-            { "id": "sub_sec_ext", "name": "Secretaría de Extensión", "dId": "sec", "isSubtree": true },
-            { "id": "sub_sec_inv", "name": "Secretaría de Investigación", "dId": "sec", "isSubtree": true },
-            { "id": "g4", "name": "Secretaría de Rectorado", "dId": "sec" },
-            { "id": "g5", "name": "Secretaría de Vicerrectorado", "dId": "sec" },
-            { "id": "sub_fac_eco", "name": "Facultad de Ciencias Económicas", "dId": "fac", "isSubtree": true },
-            { "id": "sub_fac_der", "name": "Facultad de Derecho y Cs. Social", "dId": "fac", "isSubtree": true },
-            { "id": "sub_fac_ing", "name": "Facultad de Ingeniería", "dId": "fac", "isSubtree": true },
-            { "id": "sub_fac_hum", "name": "Facultad de Humanidades", "dId": "fac", "isSubtree": true },
-            { "id": "sub_fac_arq", "name": "Facultad de Arquitectura y Urb.", "dId": "fac", "isSubtree": true },
-            { "id": "sub_fac_psi", "name": "Facultad de Psicología", "dId": "fac", "isSubtree": true },
-            { "id": "g6", "name": "Instituto de Gerontología", "dId": "inst" },
-            { "id": "sub_inst_dist", "name": "Instituto de Educación a Distancia", "dId": "inst", "isSubtree": true },
-            { "id": "g7", "name": "Instituto de DDHH", "dId": "inst" },
-            { "id": "g8", "name": "Instituto de Estadística", "dId": "inst" },
-            { "id": "g9", "name": "Instituto Mixto Economía Social UAA-CAM", "dId": "inst" },
-            { "id": "g10", "name": "Laboratorio Futuros", "dId": "lab" },
-            { "id": "g11", "name": "Laboratorio de Sistemas Inteligentes", "dId": "lab" },
-            { "id": "sub_depto_rrhh", "name": "Departamento de Recursos Humanos", "dId": "deptos", "isSubtree": true },
-            { "id": "sub_depto_sis", "name": "Departamento de Sistemas / Informática", "dId": "deptos", "isSubtree": true },
-            { "id": "g12", "name": "CPACA (Comisión Autoevaluación)", "dId": "calidad" }
-          ],
-          "subTrees": {
-            "sub_sec_acad": {
-              "title": "Secretaría Académica",
-              "divisions": [
-                { "id": "sa_1", "name": "Gestión y Alumnos" },
-                { "id": "sa_2", "name": "Bibliotecas y Apoyo" }
-              ],
-              "nodes": [
-                { "id": "sa_n2", "name": "Asistente Académico", "dId": "sa_1", "responsable": "PEREZ SERGIO ANDRES", "email": "sergio.perez@atlantida.edu.ar" },
-                { "id": "sa_n3", "name": "Gestión de Carreras", "dId": "sa_1", "responsable": "MOSCA LUCIANA", "email": "luciana.mosca@atlantida.edu.ar" },
-                { "id": "sa_n4", "name": "Admisión", "dId": "sa_1", "responsable": "ORTIZ MARIA FLORENCIA", "email": "admision@atlantida.edu.ar" },
-                { "id": "sa_n6", "name": "Gestión Académica", "dId": "sa_1" },
-                { "id": "node_1780599859335", "name": "Bedelía", "dId": "sa_1", "isSubtree": true },
-                { "id": "node_1780599991596", "name": "División alumnos", "dId": "sa_1", "isSubtree": true },
-                { "id": "node_1780600511352", "name": "Bibliotecas MDA, MDP y Dolores", "dId": "sa_2", "isSubtree": true },
-                { "id": "node_1780600521000", "name": "Depto. Biblioteca y Medios Audiovisuales", "dId": "sa_2", "isSubtree": true },
-                { "id": "node_1780600713369", "name": "División Certificaciones y Títulos", "dId": "sa_1", "responsable": "SPERANZA GAVIÑA CARLA", "email": "carla.speranza@atlantida.edu.ar", "isSubtree": true },
-                { "id": "node_1780600931376", "name": "Tutorías e Intro", "dId": "sa_1", "responsable": "ABELLEIRA MERCEDES", "email": "mercedes.abelleira@atlantida.edu.ar", "isSubtree": true }
-              ]
+        let coreData = {let coreData = {
+  "divisions": [
+    { "id": "sec", "name": "Secretarías" },
+    { "id": "fac", "name": "Facultades" },
+    { "id": "inst", "name": "Institutos y Laboratorios" },
+    { "id": "deptos", "name": "Departamentos Centrales" },
+    { "id": "calidad", "name": "Evaluación y Calidad" }
+  ],
+  "generalNodes": [
+    { "id": "sub_rectorado", "name": "Rectorado", "dId": "sec", "isSubtree": true, "responsable": "ZOGBI AMADO", "email": "azogbi@atlantida.edu.ar" },
+    { "id": "sub_sec_acad", "name": "Secretaría Académica", "dId": "sec", "isSubtree": true, "responsable": "LECUNA FLORENCIA", "email": "florencia.lecunanatalizia@atlantida.edu.ar" },
+    { "id": "sub_sec_adm", "name": "Secretaría Administrativa", "dId": "sec", "isSubtree": true, "responsable": "QUINTELA MARCELO", "email": "marcelo.quintela@atlantida.edu.ar" },
+    { "id": "sub_sec_ext", "name": "Secretaría de Extensión", "dId": "sec", "isSubtree": true, "responsable": "SANTIAGO JAVIER ERNESTO", "email": "javier.santiago@atlantida.edu.ar" },
+    { "id": "sub_sec_inv", "name": "Secretaría de investigación", "dId": "sec", "isSubtree": true, "responsable": "MASTROMARINO CLARA", "email": "clara.mastromarino@atlantida.edu.ar" },
+    { "id": "sub_sec_trans_dig", "name": "Secretaría de transformación digital", "dId": "sec", "isSubtree": true, "responsable": "SOTO EMILIANO", "email": "emiliano.soto@atlantida.edu.ar" },
+    { "id": "sub_com_prensa", "name": "Comunicación y prensa", "dId": "sec", "isSubtree": true, "responsable": "NAVARRO FLORENCIA", "email": "florencia.navarro@atlantida.edu.ar" },
+    { "id": "sub_internac", "name": "Internacionalización", "dId": "sec", "isSubtree": true, "responsable": "RUIZ CONEJO GABRIELA", "email": "gabriela.ruizconejo@atlantida.edu.ar" },
+    { "id": "sub_deleg_rect", "name": "Delegados Rectorales", "dId": "sec", "isSubtree": true, "responsable": "GARCIA EDGARDO", "email": "edgardo.garcia@atlantida.edu.ar" },
+    { "id": "sub_prom_art", "name": "Área de promoción y articulación", "dId": "sec", "isSubtree": true, "responsable": "GANCEDO SUSANA", "email": "susana.gancedo@atlantida.edu.ar" },
+    { "id": "sub_sacau", "name": "SACAU", "dId": "sec", "isSubtree": true, "responsable": "LOPEZ MARIELA", "email": "mariela.lopez@atlantida.edu.ar" },
+    { "id": "sub_fac_psi", "name": "Facultad de Psicología", "dId": "fac", "isSubtree": true, "responsable": "VAZQUEZ LIC. GABRIELA", "email": "gabriela.vazquez@atlantida.edu.ar" },
+    { "id": "sub_fac_der", "name": "Facultad de Derecho", "dId": "fac", "isSubtree": true, "responsable": "ZUBIETA DANIEL", "email": "daniel.zubieta@atlantida.edu.ar" },
+    { "id": "sub_fac_eco", "name": "Facultad de Cs Economicas", "dId": "fac", "isSubtree": true, "responsable": "LAZZERI SANTIAGO", "email": "santiago.lazzeri@atlantida.edu.ar" },
+    { "id": "sub_fac_hum", "name": "Facultad de Humanidades", "dId": "fac", "isSubtree": true, "responsable": "MARINO MARCELO", "email": "marcelo.marino@atlantida.edu.ar" },
+    { "id": "sub_fac_ing", "name": "Facultad de Ingeniería", "dId": "fac", "isSubtree": true, "responsable": "SOTO ING. EMILIANO", "email": "emiliano.soto@atlantida.edu.ar" },
+    { "id": "sub_fac_arq", "name": "Facultad de Arquitectura", "dId": "fac", "isSubtree": true, "responsable": "GALERA ESTUDIO ARCH. DIEGO", "email": "diego.galera@atlantida.edu.ar" },
+    { "id": "sub_iead", "name": "IEAD", "dId": "inst", "isSubtree": true, "responsable": "DE VINCENZI GABRIELA", "email": "gabriela.devincenzi@atlantida.edu.ar" },
+    { "id": "sub_inst_geront", "name": "Instituto de Estudios Geróntológicos", "dId": "inst", "isSubtree": true, "responsable": "YUNI JOSE", "email": "jose.yuni@atlantida.edu.ar" },
+    { "id": "sub_lia", "name": "Laboratorio de inteligencias Artificiales (LIA)", "dId": "inst", "isSubtree": true, "responsable": "SOTO EMILIANO", "email": "emiliano.soto@atlantida.edu.ar" },
+    { "id": "sub_inst_sis_int", "name": "Instituto Sistemas Inteligentes", "dId": "inst", "isSubtree": true, "responsable": "SOTO EMILIANO", "email": "emiliano.soto@atlantida.edu.ar" },
+    { "id": "sub_lab_futuro", "name": "Laboratorio Futuro", "dId": "inst", "isSubtree": true, "responsable": "ZOGBI AMADO", "email": "azogbi@atlantida.edu.ar" },
+    { "id": "sub_depto_rrhh", "name": "Recursos Humanos", "dId": "deptos", "isSubtree": true, "responsable": "LAZZERI GABRIELA", "email": "gabriela.lazzeri@atlantida.edu.ar" },
+    { "id": "sub_depto_sis", "name": "Sistemas", "dId": "deptos", "isSubtree": true, "responsable": "SOTO EMILIANO", "email": "emiliano.soto@atlantida.edu.ar" },
+    { "id": "sub_depto_infra", "name": "Infraestructura", "dId": "deptos", "isSubtree": true, "responsable": "CREMONTE CRISTIAN", "email": "cristian.cremonte@atlantida.edu.ar" },
+    { "id": "sub_depto_est", "name": "Dto de Estadìstica", "dId": "deptos", "isSubtree": true, "responsable": "CÁCERES ADRIÁN", "email": "adrian.caceres@atlantida.edu.ar" },
+    { "id": "sub_depto_posg", "name": "Dto Posgrado", "dId": "deptos", "isSubtree": true, "responsable": "MASTROMARINO CLARA", "email": "clara.mastromarino@atlantida.edu.ar" },
+    { "id": "sub_calidad_cpaca", "name": "CPACA (Comisión permanente de autoevaluación y calidad académicaI", "dId": "calidad", "isSubtree": true, "responsable": "SABELLA MARÍA JOSÉ", "email": "mariajose.sabella@atlantida.edu.ar" }
+  ],
+  "subTrees": {
+    "sub_rectorado": {
+      "title": "Rectorado",
+      "divisions": [{ "id": "sd_personal", "name": "Personal y Autoridades" }],
+      "nodes": [
+        { "id": "p_0", "name": "Rector", "dId": "sd_personal", "responsable": "ZOGBI AMADO", "email": "azogbi@atlantida.edu.ar", "isSubtree": false },
+        { "id": "p_1", "name": "Vicerrectora", "dId": "sd_personal", "responsable": "GIL ALICIA", "email": "alicia.gil@atlantida.edu.ar", "isSubtree": false },
+        { "id": "p_2", "name": "Secretaria de Rectorado", "dId": "sd_personal", "responsable": "BARTOLINI M. VALERIA", "email": "valeria.bartolini@atlantida.edu.ar", "isSubtree": false },
+        { "id": "p_3", "name": "Auxiliar Administrativo de Rectorado", "dId": "sd_personal", "responsable": "DIODATO SOFÍA", "email": "sofia.diodato@atlantida.edu.ar", "isSubtree": false },
+        { "id": "p_4", "name": "Secretaria de Vicerrectorado", "dId": "sd_personal", "responsable": "VILLALBA GABRIELA", "email": "gabriela.villalba@atlantida.edu.ar", "isSubtree": false }
+      ]
+    },
+    "sub_sec_acad": {
+      "title": "Secretaría Académica",
+      "divisions": [{ "id": "sd_personal", "name": "Personal y Autoridades" }],
+      "nodes": [
+        { "id": "p_5", "name": "Secretaria Académica", "dId": "sd_personal", "responsable": "LECUNA FLORENCIA", "email": "florencia.lecunanatalizia@atlantida.edu.ar", "isSubtree": false },
+        { "id": "p_6", "name": "Asistente de Sec Académica", "dId": "sd_personal", "responsable": "PEREZ SERGIO", "email": "sergio.perez@atlantida.edu.ar", "isSubtree": false },
+        { "id": "p_7", "name": "Gestión de carreras", "dId": "sd_personal", "responsable": "MOSCA LUCIANA", "email": "luciana.mosca@atlantida.edu.ar", "isSubtree": false },
+        { "id": "p_8", "name": "Admisión", "dId": "sd_personal", "responsable": "ORTIZ M. FLORENCIA", "email": "admision@atlantida.edu.ar", "isSubtree": false },
+        { "id": "p_9", "name": "Bedel Dolores", "dId": "sd_personal", "responsable": "TAMAGNO PATRICIA", "email": "patricia.tamagno@atlantida.edu.ar", "isSubtree": false },
+        { "id": "p_10", "name": "Bedel Dolores", "dId": "sd_personal", "responsable": "BARRAGAN FLORENCIA", "email": "florencia.barragan@atlantida.edu.ar", "isSubtree": false },
+        { "id": "p_11", "name": "Bedel MDP", "dId": "sd_personal", "responsable": "GALBAN GUILLERMO", "email": "guillermo.galban@atlantida.edu.ar", "isSubtree": false },
+        { "id": "p_12", "name": "Bedel MDP", "dId": "sd_personal", "responsable": "PEREZ CRISTIAN", "email": "cristian.perez@atlantida.edu.ar", "isSubtree": false },
+        { "id": "p_13", "name": "Bedel MDP", "dId": "sd_personal", "responsable": "TOSCANO LAUTARO", "email": "lautaro.toscano@atlantida.edu.ar", "isSubtree": false },
+        { "id": "p_14", "name": "Bedel MDA", "dId": "sd_personal", "responsable": "OLAIZOLA MARCELA", "email": "marcela.olaizola@atlantida.edu.ar", "isSubtree": false },
+        { "id": "p_15", "name": "Bedel MDA", "dId": "sd_personal", "responsable": "GIMENEZ FLAVIA", "email": "flavia.gimenez@atlantida.edu.ar", "isSubtree": false },
+        { "id": "p_16", "name": "Bedel MDA", "dId": "sd_personal", "responsable": "HANCHEN LUCIANA", "email": "luciana.hanchen@atlantida.edu.ar", "isSubtree": false },
+        { "id": "p_17", "name": "Bedelía Virtual", "dId": "sd_personal", "responsable": "MARQUIÑEZ RAFAEL", "email": "rafael.marquinez@atlantida.edu.ar", "isSubtree": false },
+        { "id": "p_18", "name": "Responsable de Títulos", "dId": "sd_personal", "responsable": "SPERANZA GAVIÑA CARLA", "email": "carla.speranza@atlantida.edu.ar", "isSubtree": false },
+        { "id": "p_19", "name": "Auxiliar de Títulos", "dId": "sd_personal", "responsable": "PEÑOÑORI MARÍA INÉS", "email": "mariaines.penonori@atlantida.edu.ar", "isSubtree": false },
+        { "id": "p_20", "name": "División Alumnos MDA", "dId": "sd_personal", "responsable": "LUDUEÑA ROXANA PAOLA", "email": "paola.luduena@atlantida.edu.ar", "isSubtree": false },
+        { "id": "p_21", "name": "División Alumnos MDA", "dId": "sd_personal", "responsable": "COSTA CARLA", "email": "carla.costa@atlantida.edu.ar", "isSubtree": false },
+        { "id": "p_22", "name": "División Alumnos Dolores", "dId": "sd_personal", "responsable": "CELLILLO MARÍA", "email": "maria.cellillo@atlantida.edu.ar", "isSubtree": false },
+        { "id": "p_23", "name": "División Alumnos MDP", "dId": "sd_personal", "responsable": "SANGUINETTI JULIETA", "email": "julieta.sanguinetti@atlantida.edu.ar", "isSubtree": false },
+        { "id": "p_24", "name": "Biblioteca MDA", "dId": "sd_personal", "responsable": "DURAN GABRIELA", "email": "gabriela.duran@atlantida.edu.ar", "isSubtree": false },
+        { "id": "p_25", "name": "Biblioteca Dolores", "dId": "sd_personal", "responsable": "REPETTO ESTELA", "email": "estela.repetto@atlantida.edu.ar", "isSubtree": false },
+        { "id": "p_26", "name": "Biblioteca MDP", "dId": "sd_personal", "responsable": "CEJAS JUAN CARLOS", "email": "juancarlos.cejas@atlantida.edu.ar", "isSubtree": false },
+        { "id": "p_27", "name": "Coordinadora de Tutores", "dId": "sd_personal", "responsable": "ABELLEIRA MERCEDES", "email": "mercedes.abelleira@atlantida.edu.ar", "isSubtree": false }
+      ]
+    },
+    "sub_sec_adm": {
+      "title": "Secretaría Administrativa",
+      "divisions": [{ "id": "sd_personal", "name": "Personal y Autoridades" }],
+      "nodes": [
+        { "id": "p_28", "name": "Secretario de Administración", "dId": "sd_personal", "responsable": "QUINTELA MARCELO", "email": "marcelo.quintela@atlantida.edu.ar", "isSubtree": false },
+        { "id": "p_29", "name": "Tesorera", "dId": "sd_personal", "responsable": "PAOLINI ADRIANA", "email": "adriana.paolini@atlantida.edu.ar", "isSubtree": false },
+        { "id": "p_30", "name": "Responsable de Compras", "dId": "sd_personal", "responsable": "SARKIS MAURICIO", "email": "mauricio.sarkis@atlantida.edu.ar", "isSubtree": false },
+        { "id": "p_31", "name": "Administrativa de compras y proveedores", "dId": "sd_personal", "responsable": "GARCIA M. FLORENCIA", "email": "florencia.garcia@atlantida.edu.ar", "isSubtree": false },
+        { "id": "p_32", "name": "Auxiliar Contable / Liquidaciones", "dId": "sd_personal", "responsable": "RODRIGUEZ PAULA", "email": "paula.rodriguez@atlantida.edu.ar", "isSubtree": false },
+        { "id": "p_33", "name": "Responsable de Cuentas Corrientes", "dId": "sd_personal", "responsable": "FALCONNAT CORINA", "email": "corina.falconnat@atlantida.edu.ar", "isSubtree": false },
+        { "id": "p_34", "name": "Cuentas Corrientes MDA", "dId": "sd_personal", "responsable": "SANTANA JOAQUIN", "email": "joaquin.santana@atlantida.edu.ar", "isSubtree": false },
+        { "id": "p_35", "name": "Cuentas Corrientes MDA", "dId": "sd_personal", "responsable": "HERNANDEZ JESSICA", "email": "jessica.hernandez@atlantida.edu.ar", "isSubtree": false },
+        { "id": "p_36", "name": "Cuentas Corrientes Dolores", "dId": "sd_personal", "responsable": "FRANCESE PATRICIA", "email": "patricia.francese@atlantida.edu.ar", "isSubtree": false },
+        { "id": "p_37", "name": "Cuentas Corrientes MDP", "dId": "sd_personal", "responsable": "FERREYRA LOURDES", "email": "lourdes.ferreyra@atlantida.edu.ar", "isSubtree": false },
+        { "id": "p_38", "name": "Cuentas Corrientes MDP", "dId": "sd_personal", "responsable": "GONZALEZ CARLA", "email": "carla.gonzalez@atlantida.edu.ar", "isSubtree": false }
+      ]
+    },
+    "sub_sec_ext": {
+      "title": "Secretaría de Extensión",
+      "divisions": [{ "id": "sd_personal", "name": "Personal y Autoridades" }],
+      "nodes": [
+        { "id": "p_39", "name": "Secretario de Extensión", "dId": "sd_personal", "responsable": "SANTIAGO JAVIER ERNESTO", "email": "javier.santiago@atlantida.edu.ar", "isSubtree": false },
+        { "id": "p_40", "name": "Responsable de Deportes", "dId": "sd_personal", "responsable": "CHALUKIAN PABLO", "email": "pablo.chalukian@atlantida.edu.ar", "isSubtree": false },
+        { "id": "p_41", "name": "Responsable de Bienestar", "dId": "sd_personal", "responsable": "VITALI M. FLORENCIA", "email": "florencia.vitali@atlantida.edu.ar", "isSubtree": false },
+        { "id": "p_42", "name": "Responsable del Centro de Idiomas", "dId": "sd_personal", "responsable": "ECHARREN M. EUGENIA", "email": "mariaeugenia.echarren@atlantida.edu.ar", "isSubtree": false },
+        { "id": "p_43", "name": "Pasantías", "dId": "sd_personal", "responsable": "BARTOLINI M. VALERIA", "email": "valeria.bartolini@atlantida.edu.ar", "isSubtree": false },
+        { "id": "p_44", "name": "Auxiliar administrativo MDP", "dId": "sd_personal", "responsable": "TENTONI AGOSTINA", "email": "agostina.tentoni@atlantida.edu.ar", "isSubtree": false }
+      ]
+    },
+    "sub_sec_inv": {
+      "title": "Secretaría de investigación",
+      "divisions": [{ "id": "sd_personal", "name": "Personal y Autoridades" }],
+      "nodes": [
+        { "id": "p_45", "name": "Secretaria de Investigación", "dId": "sd_personal", "responsable": "MASTROMARINO CLARA", "email": "clara.mastromarino@atlantida.edu.ar", "isSubtree": false },
+        { "id": "p_46", "name": "Auxiliar de Investigación", "dId": "sd_personal", "responsable": "RAMOS SEBASTIAN", "email": "sebastian.ramos@atlantida.edu.ar", "isSubtree": false }
+      ]
+    },
+    "sub_sec_trans_dig": {
+      "title": "Secretaría de transformación digital",
+      "divisions": [{ "id": "sd_personal", "name": "Personal y Autoridades" }],
+      "nodes": [
+        { "id": "p_47", "name": "Secretario de Transformación Digital", "dId": "sd_personal", "responsable": "SOTO EMILIANO", "email": "emiliano.soto@atlantida.edu.ar", "isSubtree": false },
+        { "id": "p_48", "name": "Coordinador de Medios Audiovisuales", "dId": "sd_personal", "responsable": "CASTRO JULIAN", "email": "julian.castro@atlantida.edu.ar", "isSubtree": false },
+        { "id": "p_49", "name": "Diseño UX UI", "dId": "sd_personal", "responsable": "MARTINEZ SOLANA", "email": "solana.martinez@atlantida.edu.ar", "isSubtree": false },
+        { "id": "p_50", "name": "Desarrollo Web", "dId": "sd_personal", "responsable": "PAZOS MATIAS", "email": "matias.pazos@atlantida.edu.ar", "isSubtree": false },
+        { "id": "p_51", "name": "Soporte Técnico de Aulas Hibridas MDP", "dId": "sd_personal", "responsable": "CATERINA MARIANO", "email": "mariano.caterina@atlantida.edu.ar", "isSubtree": false },
+        { "id": "p_52", "name": "Soporte Técnico de Aulas Hibridas Dolores", "dId": "sd_personal", "responsable": "PRESUCCI ESTEBAN", "email": "esteban.presucci@atlantida.edu.ar", "isSubtree": false },
+        { "id": "p_53", "name": "Soporte Técnico de Aulas Hibridas MDA", "dId": "sd_personal", "responsable": "CORREA JONATAN", "email": "jonatan.correa@atlantida.edu.ar", "isSubtree": false }
+      ]
+    },
+    "sub_com_prensa": {
+      "title": "Comunicación y prensa",
+      "divisions": [{ "id": "sd_personal", "name": "Personal y Autoridades" }],
+      "nodes": [
+        { "id": "p_54", "name": "Responsable de Prensa", "dId": "sd_personal", "responsable": "NAVARRO FLORENCIA", "email": "florencia.navarro@atlantida.edu.ar", "isSubtree": false },
+        { "id": "p_55", "name": "Responsable de Redes", "dId": "sd_personal", "responsable": "MARTINEZ FLORENCIA", "email": "florencia.martinez@atlantida.edu.ar", "isSubtree": false }
+      ]
+    },
+    "sub_internac": {
+      "title": "Internacionalización",
+      "divisions": [{ "id": "sd_personal", "name": "Personal y Autoridades" }],
+      "nodes": [
+        { "id": "p_56", "name": "Responsable de Internacionalización", "dId": "sd_personal", "responsable": "RUIZ CONEJO GABRIELA", "email": "gabriela.ruizconejo@atlantida.edu.ar", "isSubtree": false }
+      ]
+    },
+    "sub_deleg_rect": {
+      "title": "Delegados Rectorales",
+      "divisions": [{ "id": "sd_personal", "name": "Personal y Autoridades" }],
+      "nodes": [
+        { "id": "p_57", "name": "Delegado Rectoral Dolores", "dId": "sd_personal", "responsable": "GARCIA EDGARDO", "email": "edgardo.garcia@atlantida.edu.ar", "isSubtree": false },
+        { "id": "p_58", "name": "Delegada Rectoral MDP", "dId": "sd_personal", "responsable": "RUIZ CONEJO GABRIELA", "email": "gabriela.ruizconejo@atlantida.edu.ar", "isSubtree": false }
+      ]
+    },
+    "sub_prom_art": {
+      "title": "Área de promoción y articulación",
+      "divisions": [{ "id": "sd_personal", "name": "Personal y Autoridades" }],
+      "nodes": [
+        { "id": "p_59", "name": "Responsable de Promoción", "dId": "sd_personal", "responsable": "GANCEDO SUSANA", "email": "susana.gancedo@atlantida.edu.ar", "isSubtree": false },
+        { "id": "p_60", "name": "Asesora de ingreso MDP", "dId": "sd_personal", "responsable": "CASTAÑEDA LOURDES", "email": "lourdes.castaneda@atlantida.edu.ar", "isSubtree": false },
+        { "id": "p_61", "name": "Asesor de ingreso MDP", "dId": "sd_personal", "responsable": "MANGIATERRA JUAN", "email": "juan.mangiaterra@atlantida.edu.ar", "isSubtree": false },
+        { "id": "p_62", "name": "Asesora de ingreso Dolores", "dId": "sd_personal", "responsable": "RODRIGUEZ NATALIA", "email": "natalia.rodriguez@atlantida.edu.ar", "isSubtree": false },
+        { "id": "p_63", "name": "Asesora de ingreso MDA", "dId": "sd_personal", "responsable": "SANTANA FLORENCIA", "email": "florencia.santana@atlantida.edu.ar", "isSubtree": false }
+      ]
+    },
+    "sub_sacau": {
+      "title": "SACAU",
+      "divisions": [{ "id": "sd_personal", "name": "Personal y Autoridades" }],
+      "nodes": [
+        { "id": "p_64", "name": "Coordinadora de orientación vocacional y discapacidad", "dId": "sd_personal", "responsable": "LOPEZ MARIELA", "email": "mariela.lopez@atlantida.edu.ar", "isSubtree": false },
+        { "id": "p_65", "name": "Psicopedagoga Dolores", "dId": "sd_personal", "responsable": "ESPINOSA VALERIA", "email": "valeria.espinosa@atlantida.edu.ar", "isSubtree": false },
+        { "id": "p_66", "name": "Psicopedagoga MDP", "dId": "sd_personal", "responsable": "PERALTA SILVIA", "email": "silvia.peralta@atlantida.edu.ar", "isSubtree": false }
+      ]
+    },
+    "sub_fac_psi": {
+      "title": "Facultad de Psicología",
+      "divisions": [{ "id": "sd_personal", "name": "Personal y Autoridades" }],
+      "nodes": [
+        { "id": "p_67", "name": "Decana", "dId": "sd_personal", "responsable": "VAZQUEZ LIC. GABRIELA", "email": "gabriela.vazquez@atlantida.edu.ar", "isSubtree": false },
+        { "id": "p_68", "name": "Secretario Coordinador", "dId": "sd_personal", "responsable": "RAVECCA LIC. JAVIER", "email": "javier.ravecca@atlantida.edu.ar", "isSubtree": false },
+        { "id": "p_69", "name": "Secretaria de carrera MDP", "dId": "sd_personal", "responsable": "LATORRE LIC. MICAELA", "email": "psicologia.mdp@atlantida.edu.ar", "isSubtree": false },
+        { "id": "p_70", "name": "Secretaria de carrera MDA", "dId": "sd_personal", "responsable": "HANCHEN LIC. LUCIANA", "email": "psicologia@atlantida.edu.ar", "isSubtree": false },
+        { "id": "p_71", "name": "Secretaria de carrera Dolores", "dId": "sd_personal", "responsable": "CELLILLO LIC. MARIA", "email": "psicologia.dolores@atlantida.edu.ar", "isSubtree": false },
+        { "id": "p_72", "name": "Directora de Especialización en Evaluación Psicológica", "dId": "sd_personal", "responsable": "CATTANEO DR. BEATRIZ", "email": "beatriz.cattaneo@atlantida.edu.ar", "isSubtree": false }
+      ]
+    },
+    "sub_fac_der": {
+      "title": "Facultad de Derecho",
+      "divisions": [{ "id": "sd_personal", "name": "Personal y Autoridades" }],
+      "nodes": [
+        { "id": "p_73", "name": "Decano", "dId": "sd_personal", "responsable": "ZUBIETA DANIEL", "email": "daniel.zubieta@atlantida.edu.ar", "isSubtree": false },
+        { "id": "p_74", "name": "Secretario Coordinador", "dId": "sd_personal", "responsable": "GARCIA EDGARDO", "email": "edgardo.garcia@atlantida.edu.ar", "isSubtree": false },
+        { "id": "p_75", "name": "Secretaria de carrera MDP", "dId": "sd_personal", "responsable": "RODRIGUEZ REINA MARINA", "email": "derecho.mdp@atlantida.edu.ar", "isSubtree": false },
+        { "id": "p_76", "name": "Secretaria de carrera MDA", "dId": "sd_personal", "responsable": "LUDUEÑA MEMBIELA ROXANA PAOLA", "email": "derecho@atlantida.edu.ar", "isSubtree": false },
+        { "id": "p_77", "name": "Secretaria de carrera Dolores", "dId": "sd_personal", "responsable": "FRANCESE PATRICIA", "email": "derecho.dolores@atlantida.edu.ar", "isSubtree": false }
+      ]
+    },
+    "sub_fac_eco": {
+      "title": "Facultad de Cs Economicas",
+      "divisions": [{ "id": "sd_personal", "name": "Personal y Autoridades" }],
+      "nodes": [
+        { "id": "p_78", "name": "Decano", "dId": "sd_personal", "responsable": "LAZZERI SANTIAGO", "email": "santiago.lazzeri@atlantida.edu.ar", "isSubtree": false },
+        { "id": "p_79", "name": "Secretario Coordinador", "dId": "sd_personal", "responsable": "GONZALEZ ARIEL", "email": "ariel.gonzalez@atlantida.edu.ar", "isSubtree": false },
+        { "id": "p_80", "name": "Secretario de carrera MDP", "dId": "sd_personal", "responsable": "GALBAN GUILLERMO", "email": "economicas.mdp@atlantida.edu.ar", "isSubtree": false },
+        { "id": "p_81", "name": "Secretaria de carrera MDA", "dId": "sd_personal", "responsable": "COSTA CARLA", "email": "economicas@atlantida.edu.ar", "isSubtree": false },
+        { "id": "p_82", "name": "Secretaria de carrera Dolores", "dId": "sd_personal", "responsable": "TAMAGNO PATRICIA", "email": "economicas.dolores@atlantida.edu.ar", "isSubtree": false },
+        { "id": "p_83", "name": "Director de la Lic. En Comercialización", "dId": "sd_personal", "responsable": "SANTIAGO JAVIER", "email": "javier.santiago@atlantida.edu.ar", "isSubtree": false },
+        { "id": "p_84", "name": "Director del Ciclo de Lic. En Gestión de Negocios Inmob.", "dId": "sd_personal", "responsable": "GONZALEZ ARIEL", "email": "ariel.gonzalez@atlantida.edu.ar", "isSubtree": false },
+        { "id": "p_85", "name": "Director de la Lic. En Turismo", "dId": "sd_personal", "responsable": "TOSI DR. JORGE", "email": "jorge.tosi@atlantida.edu.ar", "isSubtree": false },
+        { "id": "p_86", "name": "Coordinadora de la Lic. En Turismo MDP", "dId": "sd_personal", "responsable": "SANGUINETTI JULIETA", "email": "turismo.mdp@atlantida.edu.ar", "isSubtree": false },
+        { "id": "p_87", "name": "Coordinadora de la Lic. En Turismo MDA", "dId": "sd_personal", "responsable": "GIMENEZ FLAVIA", "email": "turismo@atlantida.edu.ar", "isSubtree": false }
+      ]
+    },
+    "sub_fac_hum": {
+      "title": "Facultad de Humanidades",
+      "divisions": [{ "id": "sd_personal", "name": "Personal y Autoridades" }],
+      "nodes": [
+        { "id": "p_88", "name": "Decano", "dId": "sd_personal", "responsable": "MARINO MARCELO", "email": "marcelo.marino@atlantida.edu.ar", "isSubtree": false },
+        { "id": "p_89", "name": "Secretaria Coordinadora", "dId": "sd_personal", "responsable": "BARRAGAN FLORENCIA", "email": "florencia.barragan@atlantida.edu.ar", "isSubtree": false },
+        { "id": "p_90", "name": "Secretario de carrera MDP", "dId": "sd_personal", "responsable": "PEREZ CRISTIAN", "email": "humanidades.mdp@atlantida.edu.ar", "isSubtree": false },
+        { "id": "p_91", "name": "Secretaria de carrera MDA", "dId": "sd_personal", "responsable": "OLAIZOLA MARCELA", "email": "humanidades@atlantida.edu.ar", "isSubtree": false },
+        { "id": "p_92", "name": "Secretaria de carrera Dolores", "dId": "sd_personal", "responsable": "BARRAGAN FLORENCIA", "email": "humanidades.dolores@atlantida.edu.ar", "isSubtree": false },
+        { "id": "p_93", "name": "Director de la Lic en Ed. Física", "dId": "sd_personal", "responsable": "CHALUKIAN PABLO", "email": "pablo.chalukian@atlantida.edu.ar", "isSubtree": false },
+        { "id": "p_94", "name": "Director de la Lic en Psicopedagogía", "dId": "sd_personal", "responsable": "RAVECCA JAVIER", "email": "javier.ravecca@atlantida.edu.ar", "isSubtree": false }
+      ]
+    },
+    "sub_fac_ing": {
+      "title": "Facultad de Ingeniería",
+      "divisions": [{ "id": "sd_personal", "name": "Personal y Autoridades" }],
+      "nodes": [
+        { "id": "p_95", "name": "Decano", "dId": "sd_personal", "responsable": "SOTO ING. EMILIANO", "email": "emiliano.soto@atlantida.edu.ar", "isSubtree": false },
+        { "id": "p_96", "name": "Secretario de carrera MDP", "dId": "sd_personal", "responsable": "TOSCANO LAUTARO", "email": "ingenieria.mdp@atlantida.edu.ar", "isSubtree": false },
+        { "id": "p_97", "name": "Secretaria de carrera MDA", "dId": "sd_personal", "responsable": "GIMENEZ FLAVIA", "email": "ingenieria@atlantida.edu.ar", "isSubtree": false },
+        { "id": "p_98", "name": "Director de la Lic. En Informática", "dId": "sd_personal", "responsable": "SOTO EMILIANO", "email": "emiliano.soto@atlantida.edu.ar", "isSubtree": false },
+        { "id": "p_99", "name": "Director de Ing. En Informática", "dId": "sd_personal", "responsable": "SOTO EMILIANO", "email": "emiliano.soto@atlantida.edu.ar", "isSubtree": false }
+      ]
+    },
+    "sub_fac_arq": {
+      "title": "Facultad de Arquitectura",
+      "divisions": [{ "id": "sd_personal", "name": "Personal y Autoridades" }],
+      "nodes": [
+        { "id": "p_100", "name": "Decano interino", "dId": "sd_personal", "responsable": "GALERA ESTUDIO ARCH. DIEGO", "email": "diego.galera@atlantida.edu.ar", "isSubtree": false },
+        { "id": "p_101", "name": "Secretaria de carrera MDP", "dId": "sd_personal", "responsable": "SANGUINETTI JULIETA", "email": "arquitectura.mdp@atlantida.edu.ar", "isSubtree": false },
+        { "id": "p_102", "name": "Director de Arquitectura", "dId": "sd_personal", "responsable": "GALERA DIEGO", "email": "diego.galera@atlantida.edu.ar", "isSubtree": false }
+      ]
+    },
+    "sub_iead": {
+      "title": "IEAD",
+      "divisions": [{ "id": "sd_personal", "name": "Personal y Autoridades" }],
+      "nodes": [
+        { "id": "p_103", "name": "Directora", "dId": "sd_personal", "responsable": "DE VINCENZI GABRIELA", "email": "gabriela.devincenzi@atlantida.edu.ar", "isSubtree": false },
+        { "id": "p_104", "name": "Coordinador de producción de contenidos pedagógicos", "dId": "sd_personal", "responsable": "RODRIGUEZ SANTIAGO", "email": "santiago.rodriguez@atlantida.edu.ar", "isSubtree": false },
+        { "id": "p_105", "name": "Coordinadora de Tutores Virtuales", "dId": "sd_personal", "responsable": "FALCONE LARA", "email": "lara.falcone@atlantida.edu.ar", "isSubtree": false },
+        { "id": "p_106", "name": "Coordinador Tecnológico", "dId": "sd_personal", "responsable": "PAZOS MATIAS", "email": "matias.pazos@atlantida.edu.ar", "isSubtree": false },
+        { "id": "p_107", "name": "Diseño instruccional", "dId": "sd_personal", "responsable": "GARCIA CORNEJO MERCEDES", "email": "mercedes.garciacornejo@atlantida.edu.ar", "isSubtree": false },
+        { "id": "p_108", "name": "Revisión de contenidos", "dId": "sd_personal", "responsable": "DOMINGUEZ AGUSTINA", "email": "agustina.dominguez@atlantida.edu.ar", "isSubtree": false },
+        { "id": "p_109", "name": "Auxiliar Tecnológico", "dId": "sd_personal", "responsable": "CASTRO JULIAN", "email": "julian.castro@atlantida.edu.ar", "isSubtree": false },
+        { "id": "p_110", "name": "Secretario de alumnos virtuales", "dId": "sd_personal", "responsable": "MARQUIÑEZ RAFAEL", "email": "rafael.marquinez@atlantida.edu.ar", "isSubtree": false }
+      ]
+    },
+    "sub_inst_geront": {
+      "title": "Instituto de Estudios Geróntológicos",
+      "divisions": [{ "id": "sd_personal", "name": "Personal y Autoridades" }],
+      "nodes": [
+        { "id": "p_111", "name": "Director", "dId": "sd_personal", "responsable": "YUNI JOSE", "email": "jose.yuni@atlantida.edu.ar", "isSubtree": false }
+      ]
+    },
+    "sub_lia": {
+      "title": "Laboratorio de inteligencias Artificiales (LIA)",
+      "divisions": [{ "id": "sd_personal", "name": "Personal y Autoridades" }],
+      "nodes": [
+        { "id": "p_112", "name": "Director", "dId": "sd_personal", "responsable": "SOTO EMILIANO", "email": "emiliano.soto@atlantida.edu.ar", "isSubtree": false }
+      ]
+    },
+    "sub_inst_sis_int": {
+      "title": "Instituto Sistemas Inteligentes",
+      "divisions": [{ "id": "sd_personal", "name": "Personal y Autoridades" }],
+      "nodes": [
+        { "id": "p_113", "name": "Director", "dId": "sd_personal", "responsable": "SOTO EMILIANO", "email": "emiliano.soto@atlantida.edu.ar", "isSubtree": false }
+      ]
+    },
+    "sub_lab_futuro": {
+      "title": "Laboratorio Futuro",
+      "divisions": [{ "id": "sd_personal", "name": "Personal y Autoridades" }],
+      "nodes": [
+        { "id": "p_114", "name": "Director", "dId": "sd_personal", "responsable": "ZOGBI AMADO", "email": "azogbi@atlantida.edu.ar", "isSubtree": false }
+      ]
+    },
+    "sub_depto_rrhh": {
+      "title": "Recursos Humanos",
+      "divisions": [{ "id": "sd_personal", "name": "Personal y Autoridades" }],
+      "nodes": [
+        { "id": "p_115", "name": "Jefa de Recursos Humanos", "dId": "sd_personal", "responsable": "LAZZERI GABRIELA", "email": "gabriela.lazzeri@atlantida.edu.ar", "isSubtree": false },
+        { "id": "p_116", "name": "Analista de Administración de Personal", "dId": "sd_personal", "responsable": "SABATINO CONSTANZA", "email": "constanza.sabatino@atlantida.edu.ar", "isSubtree": false },
+        { "id": "p_117", "name": "Auxiliar de RRHH", "dId": "sd_personal", "responsable": "MARINI MARCELA", "email": "marcela.marini@atlantida.edu.ar", "isSubtree": false }
+      ]
+    },
+    "sub_depto_sis": {
+      "title": "Sistemas",
+      "divisions": [{ "id": "sd_personal", "name": "Personal y Autoridades" }],
+      "nodes": [
+        { "id": "p_118", "name": "Director de TI", "dId": "sd_personal", "responsable": "SOTO EMILIANO", "email": "emiliano.soto@atlantida.edu.ar", "isSubtree": false },
+        { "id": "p_119", "name": "Administrador de Redes e Infraestructura", "dId": "sd_personal", "responsable": "DE LEON FEDERICO", "email": "federico.deleon@atlantida.edu.ar", "isSubtree": false },
+        { "id": "p_120", "name": "Líder de Desarrollo", "dId": "sd_personal", "responsable": "PAZOS MATIAS", "email": "matias.pazos@atlantida.edu.ar", "isSubtree": false },
+        { "id": "p_121", "name": "Soporte Técnico MDA", "dId": "sd_personal", "responsable": "CORREA JONATAN", "email": "jonatan.correa@atlantida.edu.ar", "isSubtree": false },
+        { "id": "p_122", "name": "Soporte Técnico MDP", "dId": "sd_personal", "responsable": "CATERINA MARIANO", "email": "mariano.caterina@atlantida.edu.ar", "isSubtree": false },
+        { "id": "p_123", "name": "Soporte Técnico Dolores", "dId": "sd_personal", "responsable": "PRESUCCI ESTEBAN", "email": "esteban.presucci@atlantida.edu.ar", "isSubtree": false }
+      ]
+    },
+    "sub_depto_infra": {
+      "title": "Infraestructura",
+      "divisions": [{ "id": "sd_personal", "name": "Personal y Autoridades" }],
+      "nodes": [
+        { "id": "p_124", "name": "Coordinador de Infraestructura", "dId": "sd_personal", "responsable": "CREMONTE CRISTIAN", "email": "cristian.cremonte@atlantida.edu.ar", "isSubtree": false },
+        { "id": "p_125", "name": "Intendenta MDP", "dId": "sd_personal", "responsable": "ROMANO EVANGELINA", "email": "evangelina.romano@atlantida.edu.ar", "isSubtree": false },
+        { "id": "p_126", "name": "Auxiliar de Servicios Generales MDP", "dId": "sd_personal", "responsable": "ALONSO ADRIAN", "email": "adrian.alonso@atlantida.edu.ar", "isSubtree": false },
+        { "id": "p_127", "name": "Auxiliar de Servicios Generales MDP", "dId": "sd_personal", "responsable": "GARRALDA JUAN", "email": "juan.garralda@atlantida.edu.ar", "isSubtree": false },
+        { "id": "p_128", "name": "Auxiliar de Servicios Generales MDP", "dId": "sd_personal", "responsable": "MANCHADO ADRIANA", "email": "adriana.manchado@atlantida.edu.ar", "isSubtree": false },
+        { "id": "p_129", "name": "Auxiliar de Servicios Generales MDP", "dId": "sd_personal", "responsable": "MANCHADO GABRIELA", "email": "gabriela.manchado@atlantida.edu.ar", "isSubtree": false },
+        { "id": "p_130", "name": "Auxiliar de Servicios Generales MDP", "dId": "sd_personal", "responsable": "REYNOSO PATRICIA", "email": "patricia.reynoso@atlantida.edu.ar", "isSubtree": false },
+        { "id": "p_131", "name": "Auxiliar de Servicios Generales Dolores", "dId": "sd_personal", "responsable": "BARAGLIA PAULA", "email": "paula.baraglia@atlantida.edu.ar", "isSubtree": false },
+        { "id": "p_132", "name": "Auxiliar de Servicios Generales Dolores", "dId": "sd_personal", "responsable": "RODRIGUEZ NATALIA", "email": "natalia.rodriguez@atlantida.edu.ar", "isSubtree": false },
+        { "id": "p_133", "name": "Auxiliar de Servicios Generales MDA", "dId": "sd_personal", "responsable": "LOPEZ MARCELO", "email": "marcelo.lopez@atlantida.edu.ar", "isSubtree": false },
+        { "id": "p_134", "name": "Auxiliar de Servicios Generales MDA", "dId": "sd_personal", "responsable": "SANTANA FLORENCIA", "email": "florencia.santana@atlantida.edu.ar", "isSubtree": false },
+        { "id": "p_135", "name": "Auxiliar de Servicios Generales MDA", "dId": "sd_personal", "responsable": "SILVA SANTIAGO", "email": "santiago.silva@atlantida.edu.ar", "isSubtree": false }
+      ]
+    },
+    "sub_depto_est": {
+      "title": "Dto de Estadìstica",
+      "divisions": [{ "id": "sd_personal", "name": "Personal y Autoridades" }],
+      "nodes": [
+        { "id": "p_136", "name": "Responsable de Estadística", "dId": "sd_personal", "responsable": "CÁCERES ADRIÁN", "email": "adrian.caceres@atlantida.edu.ar", "isSubtree": false }
+      ]
+    },
+    "sub_depto_posg": {
+      "title": "Dto Posgrado",
+      "divisions": [{ "id": "sd_personal", "name": "Personal y Autoridades" }],
+      "nodes": [
+        { "id": "p_137", "name": "Responsable de Posgrado", "dId": "sd_personal", "responsable": "MASTROMARINO CLARA", "email": "clara.mastromarino@atlantida.edu.ar", "isSubtree": false },
+        { "id": "p_138", "name": "Auxiliar de Posgrado", "dId": "sd_personal", "responsable": "RAMOS SEBASTIAN", "email": "sebastian.ramos@atlantida.edu.ar", "isSubtree": false }
+      ]
+    },
+    "sub_calidad_cpaca": {
+      "title": "CPACA (Comisión permanente de autoevaluación y calidad académicaI",
+      "divisions": [{ "id": "sd_personal", "name": "Personal y Autoridades" }],
+      "nodes": [
+        { "id": "p_139", "name": "Coordinadora de Evaluación Institucional", "dId": "sd_personal", "responsable": "SABELLA MARÍA JOSÉ", "email": "mariajose.sabella@atlantida.edu.ar", "isSubtree": false }
+      ]
+    }
+  }
+};
             },
             "sub_sec_adm": {
               "title": "Secretaría Administrativa",
