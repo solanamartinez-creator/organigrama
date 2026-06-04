@@ -9,7 +9,7 @@
     <!-- FontAwesome para iconos -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght=300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
         #tree-container { user-select: none; cursor: grab; }
@@ -150,12 +150,12 @@
     </div>
 
     <script>
-        // --- CONFIGURACIÓN DE SEGURIDAD MANTENIDA ---
+        // --- CONFIGURACIÓN DE SEGURIDAD ---
         const ADMIN_PASSWORD = "universidad2026";
         let isAdmin = false;
-        let currentLevel = 'general'; // Almacena el nivel de navegación actual ('general' o el ID del subnivel)
+        let currentLevel = 'general'; 
 
-        // --- BASE DE DATOS ESTRUCTURADA COMPLETA DE LA UNIVERSIDAD ---
+        // --- ESTRUCTURA DE DATOS UNIFICADA DE LA UNIVERSIDAD ---
         let coreData = {
             divisions: [
                 { id: "sec", name: "Secretarías" },
@@ -165,41 +165,33 @@
                 { id: "deptos", name: "Departamentos Centrales" },
                 { id: "calidad", name: "Evaluación y Calidad" }
             ],
-            // Estructura Inicial del Organigrama General
             generalNodes: [
                 { id: "g1", name: "Rectorado", dId: "sec", responsable: "", email: "" },
                 { id: "g2", name: "Vicerrectorado", dId: "sec", responsable: "", email: "" },
                 { id: "g3", name: "Consejo Superior", dId: "sec", responsable: "", email: "" },
-                
                 { id: "sub_sec_acad", name: "Secretaría Académica", dId: "sec", isSubtree: true },
                 { id: "sub_sec_adm", name: "Secretaría Administrativa", dId: "sec", isSubtree: true },
                 { id: "sub_sec_ext", name: "Secretaría de Extensión", dId: "sec", isSubtree: true },
                 { id: "sub_sec_inv", name: "Secretaría de Investigación", dId: "sec", isSubtree: true },
                 { id: "g4", name: "Secretaría de Rectorado", dId: "sec" },
                 { id: "g5", name: "Secretaría de Vicerrectorado", dId: "sec" },
-
                 { id: "sub_fac_eco", name: "Facultad de Ciencias Económicas", dId: "fac", isSubtree: true },
                 { id: "sub_fac_der", name: "Facultad de Derecho y Cs. Social", dId: "fac", isSubtree: true },
                 { id: "sub_fac_ing", name: "Facultad de Ingeniería", dId: "fac", isSubtree: true },
                 { id: "sub_fac_hum", name: "Facultad de Humanidades", dId: "fac", isSubtree: true },
                 { id: "sub_fac_arq", name: "Facultad de Arquitectura y Urb.", dId: "fac", isSubtree: true },
                 { id: "sub_fac_psi", name: "Facultad de Psicología", dId: "fac", isSubtree: true },
-
                 { id: "g6", name: "Instituto de Gerontología", dId: "inst" },
                 { id: "sub_inst_dist", name: "Instituto de Educación a Distancia", dId: "inst", isSubtree: true },
                 { id: "g7", name: "Instituto de DDHH", dId: "inst" },
                 { id: "g8", name: "Instituto de Estadística", dId: "inst" },
                 { id: "g9", name: "Instituto Mixto Economía Social UAA-CAM", dId: "inst" },
-
                 { id: "g10", name: "Laboratorio Futuros", dId: "lab" },
                 { id: "g11", name: "Laboratorio de Sistemas Inteligentes", dId: "lab" },
-
                 { id: "sub_depto_rrhh", name: "Departamento de Recursos Humanos", dId: "deptos", isSubtree: true },
                 { id: "sub_depto_sis", name: "Departamento de Sistemas / Informática", dId: "deptos", isSubtree: true },
-                
                 { id: "g12", name: "CPACA (Comisión Autoevaluación)", dId: "calidad" }
             ],
-            // Sub-organigramas específicos mapeados uno a uno desde tu archivo
             subTrees: {
                 "sub_sec_acad": {
                     title: "Secretaría Académica",
@@ -289,7 +281,6 @@
                         { id: "rh_n6", name: "Divisiones Docentes", dId: "rh_2" }
                     ]
                 },
-                // Mapeo Estándar Automatizado para el Organigrama de CUALQUIER Facultad
                 "sub_fac_eco": { title: "Facultad de Ciencias Económicas", divisions: [{id: "f_1", name: "Gobierno"}, {id: "f_2", name: "Cuerpo Académico y Sedes"}], nodes: getFacultadStandardNodes() },
                 "sub_fac_der": { title: "Facultad de Derecho y Ciencias Sociales", divisions: [{id: "f_1", name: "Gobierno"}, {id: "f_2", name: "Cuerpo Académico y Sedes"}], nodes: getFacultadStandardNodes() },
                 "sub_fac_ing": { title: "Facultad de Ingeniería", divisions: [{id: "f_1", name: "Gobierno"}, {id: "f_2", name: "Cuerpo Académico y Sedes"}], nodes: getFacultadStandardNodes() },
@@ -301,24 +292,23 @@
 
         function getFacultadStandardNodes() {
             return [
-                { id: "fn1", name: "Decano", dId: "f_1" },
-                { id: "fn2", name: "Vicedecano", dId: "f_1" },
-                { id: "fn3", name: "Director de Carrera", dId: "f_1" },
-                { id: "fn4", name: "Secretario Coordinador", dId: "f_1" },
-                { id: "fn5", name: "Secretarios de Carrera en Sedes", dId: "f_2" },
-                { id: "fn6", name: "Comisiones (Asuntos Académicos, Extensión e Inv.)", dId: "f_2" },
-                { id: "fn7", name: "Coordinador Académico", dId: "f_2" },
-                { id: "fn8", name: "Tutores (Inicio, Trayectoria y Finalización)", dId: "f_2" }
+                { id: "fn1_" + Math.random(), name: "Decano", dId: "f_1" },
+                { id: "fn2_" + Math.random(), name: "Vicedecano", dId: "f_1" },
+                { id: "fn3_" + Math.random(), name: "Director de Carrera", dId: "f_1" },
+                { id: "fn4_" + Math.random(), name: "Secretario Coordinador", dId: "f_1" },
+                { id: "fn5_" + Math.random(), name: "Secretarios de Carrera en Sedes", dId: "f_2" },
+                { id: "fn6_" + Math.random(), name: "Comisiones (Asuntos Académicos, Extensión e Inv.)", dId: "f_2" },
+                { id: "fn7_" + Math.random(), name: "Coordinador Académico", dId: "f_2" },
+                { id: "fn8_" + Math.random(), name: "Tutores (Inicio, Trayectoria y Finalización)", dId: "f_2" }
             ];
         }
 
-        // --- MOTOR DE NAVEGACIÓN Y RENDERIZACIÓN ---
+        // --- MOTOR DE NAVEGACIÓN Y RENDERIZACIÓN DE LIENZO ---
         function renderTree() {
             const canvasContent = document.getElementById('dynamic-canvas-content');
             updateBreadcrumbs();
 
             if (currentLevel === 'general') {
-                // RENDERIZAR VISTA DE RECTORADO GENERAL
                 let html = `
                     <div class="bg-white border-2 border-[#224289] px-6 py-4 rounded-2xl shadow-md text-center min-w-[260px]">
                         <div class="text-xs font-black uppercase text-slate-400 tracking-wider">Autoridad Máxima</div>
@@ -332,6 +322,7 @@
                         <div class="bg-slate-100/90 p-4 rounded-2xl border border-slate-200 min-w-[260px] max-w-[300px] flex flex-col gap-3 flex-1">
                             <div class="flex justify-between items-center border-b border-slate-300 pb-2">
                                 <span class="text-xs font-black text-slate-700 uppercase tracking-wide">${div.name}</span>
+                                ${isAdmin ? `<button onclick="deleteDivision('${div.id}')" class="text-rose-500 hover:text-rose-700 text-xs"><i class="fa-solid fa-trash"></i></button>` : ''}
                             </div>
                             <div class="flex flex-col gap-2.5">
                     `;
@@ -342,12 +333,15 @@
                         }
                     });
 
+                    if (isAdmin) {
+                        html += `<button onclick="addNewNodePrompt('${div.id}')" class="bg-white hover:bg-slate-50 border border-dashed border-slate-300 text-[#224289] font-semibold text-xs py-2 rounded-xl transition">+ Añadir Cargo</button>`;
+                    }
+
                     html += `</div></div>`;
                 });
                 html += `</div>`;
                 canvasContent.innerHTML = html;
             } else {
-                // RENDERIZAR SUB-ORGANIGRAMA ESPECÍFICO (NIVEL INFERIOR)
                 const subtree = coreData.subTrees[currentLevel];
                 if (!subtree) return;
 
@@ -362,7 +356,7 @@
                 subtree.divisions.forEach(subDiv => {
                     html += `
                         <div class="bg-slate-100/90 p-4 rounded-2xl border border-slate-200 min-w-[280px] flex flex-col gap-3">
-                            <div class="border-b border-slate-300 pb-1.5">
+                            <div class="border-b border-slate-300 pb-1.5 flex justify-between items-center">
                                 <span class="text-xs font-bold text-slate-600 uppercase">${subDiv.name}</span>
                             </div>
                             <div class="flex flex-col gap-2.5">
@@ -372,6 +366,11 @@
                             html += buildNodeCard(node);
                         }
                     });
+
+                    if (isAdmin) {
+                        html += `<button onclick="addNewNodePrompt('${subDiv.id}')" class="bg-white hover:bg-slate-50 border border-dashed border-slate-300 text-[#11caa0] font-semibold text-xs py-2 rounded-xl transition">+ Añadir Cargo</button>`;
+                    }
+
                     html += `</div></div>`;
                 });
                 html += `</div>`;
@@ -393,11 +392,9 @@
                                 <i class="fa-solid fa-folder-tree"></i> Ver Detalle
                             </button>
                         ` : ''}
-                        ${isAdmin ? `
-                            <button onclick="openEditModal('${node.id}')" class="bg-amber-50 text-amber-700 text-[10px] font-bold py-1 px-2.5 rounded-lg border border-amber-200 hover:bg-amber-500 hover:text-white transition ${node.isSubtree ? '' : 'w-full'}">
-                                <i class="fa-solid fa-pen"></i> Asignar
-                            </button>
-                        ` : ''}
+                        <button onclick="openEditModal('${node.id}')" class="bg-slate-50 text-slate-700 text-[10px] font-bold py-1 px-2.5 rounded-lg border border-slate-200 hover:bg-slate-200 transition ${node.isSubtree ? 'admin-only' : 'w-full'}">
+                            <i class="fa-solid fa-user-pen text-amber-500"></i> ${isAdmin ? 'Asignar' : 'Ficha'}
+                        </button>
                     </div>
                 </div>
             `;
@@ -423,30 +420,131 @@
             }
         }
 
-        // --- CONTROL DEL LIENZO INTERACTIVO (MAPS MOUSE DRAG & ZOOM) ---
-        let zoomLevel = 1.0;
-        let panX = 0, panY = 0;
-        let isDragging = false;
-        let startX, startY;
+        // --- SISTEMA DINÁMICO DE ALTAS Y CRUD (ELIMINADO ERRORES DE REFERENCIA) ---
+        function addNewDivisionPrompt() {
+            const name = prompt("Nombre de la nueva columna o departamento:");
+            if (!name) return;
+            const newId = "div_" + Date.now();
+            
+            if (currentLevel === 'general') {
+                coreData.divisions.push({ id: newId, name: name });
+            } else {
+                if (coreData.subTrees[currentLevel]) {
+                    coreData.subTrees[currentLevel].divisions.push({ id: newId, name: name });
+                }
+            }
+            saveToStorage();
+            renderTree();
+        }
 
+        function addNewNodePrompt(divId) {
+            const name = prompt("Nombre del cargo o área funcional:");
+            if (!name) return;
+            const newId = "node_" + Date.now();
+            const checkSubtree = confirm("¿Esta tarjeta desplegará su propio sub-organigrama al hacer clic en 'Ver Detalle'? (Aceptar = Sí, Cancelar = No)");
+
+            const nodeObj = { id: newId, name: name, dId: divId, responsable: "", email: "", isSubtree: checkSubtree };
+
+            if (currentLevel === 'general') {
+                coreData.generalNodes.push(nodeObj);
+            } else {
+                coreData.subTrees[currentLevel].nodes.push(nodeObj);
+            }
+
+            if (checkSubtree) {
+                coreData.subTrees[newId] = { title: name, divisions: [{ id: "sd_" + Date.now(), name: "Áreas Internas" }], nodes: [] };
+            }
+
+            saveToStorage();
+            renderTree();
+        }
+
+        function deleteDivision(divId) {
+            if (!confirm("¿Deseas eliminar esta columna y todos los cargos asociados a ella?")) return;
+            coreData.divisions = coreData.divisions.filter(d => d.id !== divId);
+            coreData.generalNodes = coreData.generalNodes.filter(n => n.dId !== divId);
+            saveToStorage();
+            renderTree();
+        }
+
+        // --- GESTIÓN DE MODAL DE EDICIÓN ---
+        let targetEditId = null;
+        function openEditModal(nodeId) {
+            targetEditId = nodeId;
+            let node = findNodeById(nodeId);
+            if(!node) return;
+
+            document.getElementById('modal-role-name').value = node.name;
+            document.getElementById('modal-input-nombre').value = node.responsable || '';
+            document.getElementById('modal-input-email').value = node.email || '';
+            
+            // Si el modo administrador no está activo, bloquear los inputs para modo visor
+            document.getElementById('modal-role-name').disabled = !isAdmin;
+            document.getElementById('modal-input-nombre').disabled = !isAdmin;
+            document.getElementById('modal-input-email').disabled = !isAdmin;
+            document.getElementById('btn-delete-node').style.display = isAdmin ? 'block' : 'none';
+
+            document.getElementById('edit-modal').classList.remove('hidden');
+        }
+
+        function closeEditModal() { document.getElementById('edit-modal').classList.add('hidden'); }
+
+        function saveAssignment() {
+            if(!isAdmin) { closeEditModal(); return; }
+            let node = findNodeById(targetEditId);
+            if (node) {
+                node.name = document.getElementById('modal-role-name').value;
+                node.responsable = document.getElementById('modal-input-nombre').value;
+                node.email = document.getElementById('modal-input-email').value;
+                saveToStorage();
+            }
+            closeEditModal();
+            renderTree();
+        }
+
+        function deleteCurrentPosition() {
+            if(!isAdmin || !targetEditId) return;
+            if(!confirm("¿Estás seguro de eliminar este puesto de la estructura?")) return;
+
+            if (currentLevel === 'general') {
+                coreData.generalNodes = coreData.generalNodes.filter(n => n.id !== targetEditId);
+            } else {
+                coreData.subTrees[currentLevel].nodes = coreData.subTrees[currentLevel].nodes.filter(n => n.id !== targetEditId);
+            }
+            delete coreData.subTrees[targetEditId]; // Limpiar sub-árbol si existía
+
+            saveToStorage();
+            closeEditModal();
+            renderTree();
+        }
+
+        function findNodeById(nodeId) {
+            let node = coreData.generalNodes.find(n => n.id === nodeId);
+            if (!node) {
+                Object.keys(coreData.subTrees).forEach(k => {
+                    let sn = coreData.subTrees[k].nodes.find(n => n.id === nodeId);
+                    if (sn) node = sn;
+                });
+            }
+            return node;
+        }
+
+        function saveToStorage() { localStorage.setItem('uaa_organigrama_save_v2', JSON.stringify(coreData)); }
+
+        // --- SISTEMA DE DESPLAZAMIENTO (ESTILO GOOGLE MAPS) ---
+        let zoomLevel = 1.0; let panX = 0, panY = 0; let isDragging = false; let startX, startY;
         const treeContainer = document.getElementById('tree-container');
         const canvas = document.getElementById('tree-canvas');
 
         treeContainer.addEventListener('mousedown', (e) => {
             if (e.target.closest('button') || e.target.closest('input') || e.target.closest('#edit-modal')) return;
-            isDragging = true;
-            startX = e.clientX - panX;
-            startY = e.clientY - panY;
+            isDragging = true; startX = e.clientX - panX; startY = e.clientY - panY;
             treeContainer.style.cursor = 'grabbing';
         });
-
         window.addEventListener('mousemove', (e) => {
-            if (!isDragging) return;
-            panX = e.clientX - startX;
-            panY = e.clientY - startY;
+            if (!isDragging) return; panX = e.clientX - startX; panY = e.clientY - startY;
             canvas.style.transform = `translate(${panX}px, ${panY}px) scale(${zoomLevel})`;
         });
-
         window.addEventListener('mouseup', () => { isDragging = false; treeContainer.style.cursor = 'grab'; });
         treeContainer.addEventListener('wheel', (e) => { e.preventDefault(); adjustZoom(e.deltaY < 0 ? 0.05 : -0.05); });
 
@@ -455,88 +553,35 @@
             document.getElementById('zoom-indicator').textContent = `${Math.round(zoomLevel * 100)}%`;
             canvas.style.transform = `translate(${panX}px, ${panY}px) scale(${zoomLevel})`;
         }
+        function resetZoomAndPan() { zoomLevel = 1.0; panX = 0; panY = 0; document.getElementById('zoom-indicator').textContent = "100%"; canvas.style.transform = `translate(0px, 0px) scale(1)`; }
 
-        function resetZoomAndPan() {
-            zoomLevel = 1.0; panX = 0; panY = 0;
-            document.getElementById('zoom-indicator').textContent = "100%";
-            canvas.style.transform = `translate(0px, 0px) scale(1)`;
-        }
-
-        // --- MANEJO DE ACCESO ADM / EDITOR ---
+        // --- PANEL CONTROL DE SESIÓN ---
         function promptAdminLogin() {
             if (isAdmin) {
-                isAdmin = false;
-                document.body.classList.remove('is-admin');
+                isAdmin = false; document.body.classList.remove('is-admin');
                 document.getElementById('btn-login-status').innerHTML = '<i class="fa-solid fa-lock"></i> Acceso Editor';
-                renderTree();
-                return;
+                renderTree(); return;
             }
-            const pass = prompt("Contraseña de seguridad:");
+            const pass = prompt("Contraseña de seguridad de la Universidad:");
             if (pass === ADMIN_PASSWORD) {
-                isAdmin = true;
-                document.body.classList.add('is-admin');
+                isAdmin = true; document.body.classList.add('is-admin');
                 document.getElementById('btn-login-status').innerHTML = '<i class="fa-solid fa-unlock text-green-400"></i> Modo Editor Activo';
                 renderTree();
-            } else if (pass !== null) {
-                alert("Código inválido.");
-            }
+            } else if (pass !== null) { alert("Acceso denegado."); }
         }
 
-        // --- EDICIÓN Y PERSISTENCIA (LOCALSTORAGE) ---
-        let targetEditId = null;
-        function openEditModal(nodeId) {
-            targetEditId = nodeId;
-            let node = coreData.generalNodes.find(n => n.id === nodeId);
-            if (!node) {
-                Object.keys(coreData.subTrees).forEach(k => {
-                    let sn = coreData.subTrees[k].nodes.find(n => n.id === nodeId);
-                    if (sn) node = sn;
-                });
-            }
-            if(!node) return;
-            document.getElementById('modal-role-name').value = node.name;
-            document.getElementById('modal-input-nombre').value = node.responsable || '';
-            document.getElementById('modal-input-email').value = node.email || '';
-            document.getElementById('edit-modal').classList.remove('hidden');
-        }
-
-        function closeEditModal() { document.getElementById('edit-modal').classList.add('hidden'); }
-
-        function saveAssignment() {
-            let node = coreData.generalNodes.find(n => n.id === targetEditId);
-            if (!node) {
-                Object.keys(coreData.subTrees).forEach(k => {
-                    let sn = coreData.subTrees[k].nodes.find(n => n.id === targetEditId);
-                    if (sn) node = sn;
-                });
-            }
-            if (node) {
-                node.name = document.getElementById('modal-role-name').value;
-                node.responsable = document.getElementById('modal-input-nombre').value;
-                node.email = document.getElementById('modal-input-email').value;
-                localStorage.setItem('uaa_organigrama_save', JSON.stringify(coreData));
-            }
-            closeEditModal();
-            renderTree();
-        }
-
-        // --- SISTEMA DE BUSCADOR GENERAL ---
+        // --- BUSCADOR INTERACTIVO ---
         function handleSearch(q) {
-            q = q.toLowerCase().trim();
-            if(!q) { renderTree(); return; }
-            const cards = document.querySelectorAll('#dynamic-canvas-content .group');
-            cards.forEach(c => {
-                if(c.textContent.toLowerCase().includes(q)) {
-                    c.classList.add('ring-4', 'ring-amber-400', 'scale-105');
-                } else {
-                    c.classList.remove('ring-4', 'ring-amber-400', 'scale-105');
-                }
+            q = q.toLowerCase().trim(); if(!q) { renderTree(); return; }
+            document.querySelectorAll('#dynamic-canvas-content .group').forEach(c => {
+                if(c.textContent.toLowerCase().includes(q)) { c.classList.add('ring-4', 'ring-amber-400', 'scale-105'); } 
+                else { c.classList.remove('ring-4', 'ring-amber-400', 'scale-105'); }
             });
         }
 
+        // --- VISTA ALTERNATIVA EN TABLA ---
         function renderListTable() {
-            const tbody = document.getElementById('table-body');
-            let html = '';
+            const tbody = document.getElementById('table-body'); let html = '';
             coreData.generalNodes.forEach(n => {
                 html += `<tr><td class="py-3 px-6 text-xs text-slate-400 font-bold">General</td><td class="py-3 px-6 font-bold text-[#224289]">${n.name}</td><td class="py-3 px-6">${n.responsable || '—'}</td><td class="py-3 px-6 text-xs">${n.email || '—'}</td></tr>`;
             });
@@ -550,13 +595,8 @@
         }
 
         function switchView(view) {
-            if (view === 'chart') {
-                document.getElementById('view-chart').classList.remove('hidden');
-                document.getElementById('view-list').classList.add('hidden');
-            } else {
-                document.getElementById('view-chart').classList.add('hidden');
-                document.getElementById('view-list').classList.remove('hidden');
-            }
+            document.getElementById('view-chart').style.display = view === 'chart' ? 'flex' : 'none';
+            document.getElementById('view-list').style.display = view === 'list' ? 'block' : 'none';
         }
 
         function exportToJSON() {
@@ -571,15 +611,14 @@
             r.onload = function(evt) {
                 try {
                     coreData = JSON.parse(evt.target.result);
-                    localStorage.setItem('uaa_organigrama_save', JSON.stringify(coreData));
-                    renderTree();
+                    saveToStorage(); renderTree();
                 } catch(err) { alert("JSON no válido."); }
             };
             r.readAsText(file);
         }
 
         window.onload = () => {
-            const saved = localStorage.getItem('uaa_organigrama_save');
+            const saved = localStorage.getItem('uaa_organigrama_save_v2');
             if(saved) coreData = JSON.parse(saved);
             renderTree();
         };
