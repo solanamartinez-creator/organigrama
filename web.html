@@ -3,61 +3,86 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Organigrama Interactivo - Universidad Atlántida Argentina</title>
-    <!-- Tailwind CSS -->
+    <title>Organigrama Institucional - Universidad Atlántida</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- FontAwesome para iconos -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
-        #tree-container { user-select: none; cursor: grab; }
-        #tree-container:active { cursor: grabbing; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+        }
+        #tree-container {
+            user-select: none;
+            cursor: grab;
+        }
+        #tree-container:active {
+            cursor: grabbing;
+        }
         .canvas-grid {
             background-size: 24px 24px;
             background-image: radial-gradient(circle, #cbd5e1 1.2px, transparent 1.2px);
             background-color: #f8fafc;
         }
-        .admin-only { display: none !important; }
-        body.is-admin .admin-only { display: flex !important; }
-        body.is-admin .admin-only-block { display: block !important; }
+        /* Conectores verticales del organigrama */
+        .tree-line-v {
+            width: 2px;
+            background-color: #cbd5e1;
+            flex-grow: 1;
+        }
+        .tree-line-h {
+            height: 2px;
+            background-color: #cbd5e1;
+        }
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 6px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #224289;
+        }
     </style>
 </head>
 <body class="min-h-screen flex flex-col overflow-x-hidden">
 
-    <!-- Barra de Herramientas Principal -->
     <section class="bg-white border-b border-slate-200 py-3.5 px-6 shadow-sm sticky top-0 z-30">
         <div class="max-w-[1700px] mx-auto flex flex-col lg:flex-row justify-between items-center gap-4">
             
             <div class="flex flex-col md:flex-row items-center gap-4 w-full lg:w-auto">
-                <div class="flex bg-slate-100 p-1 rounded-xl">
-                    <button id="tab-chart" onclick="switchView('chart')" class="py-2 px-4 rounded-lg text-sm font-semibold bg-white text-[#224289] shadow-sm">
-                        <i class="fa-solid fa-sitemap"></i> Vista de Árbol
+                <div class="flex bg-slate-100 p-1 rounded-xl w-full md:w-auto">
+                    <button id="tab-chart" onclick="switchView('chart')" class="flex-1 md:flex-none py-2 px-4 rounded-lg text-sm font-semibold transition bg-white text-[#224289] shadow-sm">
+                        <i class="fa-solid fa-sitemap"></i> Vista de Árbol Jerárquico
                     </button>
-                    <button id="tab-list" onclick="switchView('list')" class="py-2 px-4 rounded-lg text-sm font-semibold text-slate-600 hover:text-slate-900">
-                        <i class="fa-solid fa-table-list"></i> Lista Completa
+                    <button id="tab-list" onclick="switchView('list')" class="flex-1 md:flex-none py-2 px-4 rounded-lg text-sm font-semibold transition text-slate-600 hover:text-slate-900">
+                        <i class="fa-solid fa-table-list"></i> Vista de Planilla
                     </button>
                 </div>
                 
-                <!-- Barra de Navegación por Niveles -->
-                <div id="breadcrumbs" class="flex items-center gap-2 text-xs font-semibold text-slate-500 bg-slate-50 px-3 py-2 rounded-xl border border-slate-200">
-                    <span class="text-[#224289] cursor-pointer hover:underline" onclick="navigateToLevel('general')">
-                        <i class="fa-solid fa-university"></i> Organigrama General
-                    </span>
+                <div id="breadcrumbs" class="flex items-center gap-2 text-xs font-semibold text-slate-500 bg-slate-50 px-3 py-2 rounded-xl border border-slate-200 shadow-xs">
+                    <span class="text-[#224289] cursor-pointer" onclick="navigateToLevel('general')"><i class="fa-solid fa-house"></i> Rectorado General</span>
+                    <span class="hidden" id="crumb-separator"><i class="fa-solid fa-chevron-right text-[10px]"></i></span>
+                    <span class="text-slate-800 font-bold hidden" id="crumb-subdepartment">Subárea</span>
                 </div>
             </div>
 
-            <!-- Acciones de Edición -->
             <div class="flex flex-wrap items-center justify-center gap-2 w-full lg:w-auto">
-                <button onclick="addNewDivisionPrompt()" class="admin-only bg-slate-50 hover:bg-slate-100 text-[#224289] text-xs font-bold py-2 px-3.5 rounded-lg border border-slate-200 shadow-xs">
-                    <i class="fa-solid fa-circle-plus text-[#11caa0]"></i> + Nueva Sección
+                <button onclick="addNewPuestoPrompt()" class="bg-slate-50 hover:bg-slate-100 text-[#224289] text-xs font-bold py-2 px-3.5 rounded-lg border border-slate-200 shadow-xs">
+                    <i class="fa-solid fa-circle-plus text-[#11caa0]"></i> + Añadir Puesto Dependiente
                 </button>
-                <button onclick="exportToJSON()" class="admin-only bg-slate-50 hover:bg-slate-100 text-slate-700 text-xs font-semibold py-2 px-3 rounded-lg border border-slate-200">
-                    <i class="fa-solid fa-file-export text-[#224289]"></i> Exportar Estructura
+                <button onclick="exportToJSON()" class="bg-slate-50 hover:bg-slate-100 text-slate-700 text-xs font-semibold py-2 px-3 rounded-lg border border-slate-200">
+                    <i class="fa-solid fa-file-export text-[#224289]"></i> Exportar Backup
                 </button>
-                <button id="btn-login-status" onclick="promptAdminLogin()" class="bg-[#224289] hover:bg-[#1b346d] text-white text-xs font-bold py-2 px-4 rounded-lg shadow-sm transition-all">
-                    <i class="fa-solid fa-lock"></i> Acceso Editor
+                <button onclick="showResetConfirmation()" class="bg-rose-50 hover:bg-rose-100 text-rose-600 text-xs font-semibold py-2 px-3 rounded-lg border border-rose-200">
+                    <i class="fa-solid fa-rotate-left"></i> Reiniciar Estructura
                 </button>
             </div>
 
@@ -65,49 +90,54 @@
                 <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
                     <i class="fa-solid fa-magnifying-glass"></i>
                 </span>
-                <input type="text" id="search-input" oninput="handleSearch(this.value)" placeholder="Buscar dependencia o puesto..." class="w-full bg-slate-50 border border-slate-200 rounded-xl py-2 pl-10 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-[#224289]">
+                <input type="text" id="search-input" oninput="handleSearch(this.value)" placeholder="Buscar puesto o responsable..." class="w-full bg-slate-50 border border-slate-200 rounded-xl py-2 pl-10 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-[#224289]">
             </div>
         </div>
     </section>
 
-    <!-- Lienzo Principal -->
     <main class="flex-1 p-6 max-w-[1700px] mx-auto w-full flex flex-col">
-        <div id="view-chart" class="flex-1 flex flex-col bg-slate-50 rounded-3xl border border-slate-200 shadow-inner overflow-hidden min-h-[650px] relative">
+        
+        <div id="department-banner" class="mb-6 bg-white border border-slate-200 border-l-4 border-[#224289] p-4 rounded-r-2xl shadow-sm flex items-center justify-between text-slate-800 hidden">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center text-[#224289] border border-slate-200"><i class="fa-solid fa-graduation-cap"></i></div>
+                <div>
+                    <h2 id="banner-title" class="text-base font-bold text-slate-900">-</h2>
+                    <p id="banner-subtitle" class="text-[11px] text-slate-500">Dependencia interna jerárquica</p>
+                </div>
+            </div>
+            <button onclick="navigateToLevel('general')" class="bg-slate-50 hover:bg-slate-100 text-slate-700 text-xs font-semibold py-1.5 px-3.5 rounded-lg border border-slate-200 transition flex items-center gap-1.5">
+                <i class="fa-solid fa-arrow-left-long"></i> Volver al Nivel Superior General
+            </button>
+        </div>
+
+        <div id="view-chart" class="flex-1 flex flex-col bg-slate-50 rounded-3xl border border-slate-200 shadow-inner overflow-hidden min-h-[700px] relative">
             
-            <!-- Controles de Zoom -->
             <div class="absolute top-4 left-4 z-20 bg-white p-2 rounded-2xl border border-slate-200 shadow-md flex items-center gap-1.5">
-                <button onclick="adjustZoom(0.1)" class="w-9 h-9 bg-slate-50 hover:bg-[#224289] text-slate-600 hover:text-white rounded-xl flex items-center justify-center border border-slate-200 transition-all">
-                    <i class="fa-solid fa-magnifying-glass-plus"></i>
-                </button>
-                <button onclick="adjustZoom(-0.1)" class="w-9 h-9 bg-slate-50 hover:bg-[#224289] text-slate-600 hover:text-white rounded-xl flex items-center justify-center border border-slate-200 transition-all">
-                    <i class="fa-solid fa-magnifying-glass-minus"></i>
-                </button>
-                <button onclick="resetZoomAndPan()" class="w-9 h-9 bg-slate-50 hover:bg-[#224289] text-slate-600 hover:text-white rounded-xl flex items-center justify-center border border-slate-200 transition-all">
-                    <i class="fa-solid fa-expand"></i>
-                </button>
+                <button onclick="adjustZoom(0.1)" class="w-9 h-9 bg-slate-50 hover:bg-[#224289] text-slate-600 hover:text-white rounded-xl flex items-center justify-center border border-slate-200"><i class="fa-solid fa-magnifying-glass-plus"></i></button>
+                <button onclick="adjustZoom(-0.1)" class="w-9 h-9 bg-slate-50 hover:bg-[#224289] text-slate-600 hover:text-white rounded-xl flex items-center justify-center border border-slate-200"><i class="fa-solid fa-magnifying-glass-minus"></i></button>
+                <button onclick="resetZoomAndPan()" class="w-9 h-9 bg-slate-50 hover:bg-[#224289] text-slate-600 hover:text-white rounded-xl flex items-center justify-center border border-slate-200"><i class="fa-solid fa-expand"></i></button>
                 <span id="zoom-indicator" class="text-xs text-slate-600 font-bold px-2.5">100%</span>
             </div>
 
-            <!-- Canvas Arrastrable -->
-            <div id="tree-container" class="w-full h-full min-h-[600px] overflow-hidden relative flex items-center justify-center canvas-grid">
-                <div id="tree-canvas" class="absolute origin-center transition-transform duration-75 ease-out p-12 flex flex-col items-center gap-12" style="transform: translate(0px, 0px) scale(1);">
-                    <div id="dynamic-canvas-content" class="w-full flex flex-col items-center gap-12">
-                        <!-- Aquí se dibuja el árbol por JS -->
-                    </div>
+            <div id="tree-container" class="w-full h-full min-h-[660px] overflow-hidden relative flex items-start justify-center pt-10 canvas-grid">
+                <div id="tree-canvas" class="absolute origin-top transition-transform duration-75 ease-out p-12 flex flex-col items-center" style="transform: translate(0px, 0px) scale(1);">
+                    
+                    <div id="dynamic-canvas-content" class="w-full flex flex-col items-center">
+                        </div>
+
                 </div>
             </div>
         </div>
 
-        <!-- Vista de Lista Alternativa -->
         <div id="view-list" class="hidden bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-md">
             <div class="overflow-x-auto">
                 <table class="w-full text-left border-collapse">
                     <thead>
-                        <tr class="bg-slate-50 border-b border-slate-200 text-xs font-bold text-slate-500 uppercase">
-                            <th class="py-4 px-6">Sección / Nivel</th>
-                            <th class="py-4 px-6">Cargo / Dependencia</th>
-                            <th class="py-4 px-6">Responsable Autoridad</th>
-                            <th class="py-4 px-6">Contacto Institucional</th>
+                        <tr class="bg-slate-50 border-b border-slate-200 text-xs font-bold text-slate-500 uppercase tracking-wider">
+                            <th class="py-4 px-6">Área / Rama Superior</th>
+                            <th class="py-4 px-6">Puesto</th>
+                            <th class="py-4 px-6">Responsable</th>
+                            <th class="py-4 px-6">Email</th>
                         </tr>
                     </thead>
                     <tbody id="table-body" class="divide-y divide-slate-100 text-sm text-slate-700"></tbody>
@@ -116,255 +146,305 @@
         </div>
     </main>
 
-    <!-- Modal de Edición -->
     <div id="edit-modal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center hidden p-4">
         <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden border border-slate-100">
             <div class="bg-[#224289] p-5 text-white flex justify-between items-center">
-                <h3 class="font-bold text-base">Modificar Cargo Organizacional</h3>
-                <button onclick="closeEditModal()" class="text-white/70 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+                <h3 class="font-bold text-base">Modificar Puesto de Trabajo</h3>
+                <button onclick="closeEditModal()" class="text-white/70 hover:text-white w-8 h-8 rounded-full flex items-center justify-center"><i class="fa-solid fa-xmark"></i></button>
             </div>
             <div class="p-6 space-y-4">
                 <div>
-                    <label class="block text-xs font-bold text-slate-600 mb-1">Nombre del Puesto / Oficina *</label>
-                    <input type="text" id="modal-role-name" class="w-full bg-slate-50 border border-slate-200 rounded-xl py-2 px-3 text-sm focus:ring-2 focus:ring-[#224289] outline-none">
+                    <label class="block text-[10px] font-bold text-[#224289] uppercase tracking-wider mb-1">Nombre de la Oficina / Puesto</label>
+                    <input type="text" id="modal-role-name" class="w-full bg-slate-50 border border-slate-200 rounded-xl py-2.5 px-3 text-sm font-semibold text-slate-800 outline-none">
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Apellido</label>
+                        <input type="text" id="modal-input-apellido" class="w-full bg-white border border-slate-200 rounded-xl py-2.5 px-3 text-sm text-slate-800 outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Nombre</label>
+                        <input type="text" id="modal-input-nombre" class="w-full bg-white border border-slate-200 rounded-xl py-2.5 px-3 text-sm text-slate-800 outline-none">
+                    </div>
                 </div>
                 <div>
-                    <label class="block text-xs font-bold text-slate-600 mb-1">Nombre de la Autoridad / Responsable</label>
-                    <input type="text" id="modal-input-nombre" class="w-full bg-slate-50 border border-slate-200 rounded-xl py-2 px-3 text-sm focus:ring-2 focus:ring-[#224289] outline-none">
-                </div>
-                <div>
-                    <label class="block text-xs font-bold text-slate-600 mb-1">Correo Electrónico Interno</label>
-                    <input type="email" id="modal-input-email" class="w-full bg-slate-50 border border-slate-200 rounded-xl py-2 px-3 text-sm focus:ring-2 focus:ring-[#224289] outline-none">
+                    <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Email Institucional</label>
+                    <input type="email" id="modal-input-email" class="w-full bg-white border border-slate-200 rounded-xl py-2.5 px-3 text-sm text-slate-800 outline-none">
                 </div>
             </div>
-            <div class="bg-slate-50 p-5 flex justify-between">
-                <button onclick="deleteCurrentPosition()" id="btn-delete-node" class="bg-rose-50 hover:bg-rose-100 text-rose-600 text-xs font-bold px-3 py-2 rounded-xl">Eliminar Nodo</button>
-                <div class="flex gap-2">
-                    <button onclick="closeEditModal()" class="bg-slate-200 text-slate-700 text-xs font-bold px-4 py-2 rounded-xl">Cancelar</button>
-                    <button onclick="saveAssignment()" class="bg-[#224289] text-white text-xs font-bold px-5 py-2 rounded-xl">Guardar</button>
+            <div class="bg-slate-50 p-5 border-t border-slate-100 flex justify-between items-center">
+                <button id="modal-delete-btn" onclick="deleteCurrentPosition()" class="bg-rose-50 hover:bg-rose-100 text-rose-600 text-xs font-bold px-3 py-2.5 rounded-xl transition">
+                    <i class="fa-solid fa-trash-can"></i> Eliminar
+                </button>
+                <div class="flex gap-2.5 ml-auto">
+                    <button onclick="closeEditModal()" class="bg-slate-200 text-slate-700 text-xs font-bold px-4 py-2.5 rounded-xl">Cancelar</button>
+                    <button onclick="saveAssignment()" class="bg-[#224289] text-white text-xs font-bold px-5 py-2.5 rounded-xl shadow-md">Guardar</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Notificaciones Toast -->
-    <div id="toast-ui" class="fixed bottom-6 right-6 z-50 transform translate-y-12 opacity-0 pointer-events-none transition-all duration-300 ease-out bg-white border border-slate-100 shadow-2xl p-4 rounded-2xl flex items-center gap-3.5 max-w-sm">
-        <div id="toast-icon" class="text-xl"></div>
-        <p id="toast-message" class="text-xs font-semibold text-slate-700"></p>
-    </div>
-
-    <!-- AQUÍ SE PONE TU SCRIPT DE DATOS Y LÓGICA -->
     <script>
-        const ADMIN_PASSWORD = "universidad2026";
-        let isAdmin = false;
-        let currentLevel = 'general'; 
-        let currentEditingNodeId = null;
+        // Estructura Unificada en Árbol Vertical, Todo dependiente de Rectorado
+        let coreStructure = {
+            "id": "rectorado",
+            "name": "Rectorado (Rector/Vicerrector)",
+            "apellido": "Zogbi",
+            "nombre": "Amado",
+            "email": "azogbi@atlantida.edu.ar",
+            "children": [
+                {
+                    "name": "Secretaría Académica",
+                    "apellido": "Lecuna",
+                    "nombre": "Florencia",
+                    "email": "florencia.lecuna@atlantida.edu.ar",
+                    "children": [
+                        { "name": "Bedelía", "apellido": "Olaizola", "nombre": "Marcela Inés", "email": "marcela.olaizola@atlantida.edu.ar", "children": [
+                            { "name": "Bedel", "apellido": "Godoy", "nombre": "Gonzalo Ariel", "email": "gonzalo.godoy@atlantida.edu.ar" },
+                            { "name": "Bedel", "apellido": "Miyara", "nombre": "Celeste", "email": "celeste.miyara@atlantida.edu.ar" },
+                            { "name": "Bedel", "apellido": "Pérez", "nombre": "Sergio", "email": "sergio.perez@atlantida.edu.ar" }
+                        ]},
+                        { "name": "Gestión de Carreras", "apellido": "Mosca", "nombre": "Luciana", "email": "luciana.mosca@atlantida.edu.ar" },
+                        { "name": "Área de Títulos y Egresados", "apellido": "", "nombre": "", "email": "" }
+                    ]
+                },
+                {
+                    "name": "Secretaría Administrativa",
+                    "apellido": "Quintela",
+                    "nombre": "Marcelo",
+                    "email": "marcelo.quintela@atlantida.edu.ar",
+                    "children": [
+                        { "name": "Tesorería", "apellido": "Ayala", "nombre": "Cristian Claudio", "email": "cristian.ayala@atlantida.edu.ar" }
+                    ]
+                },
+                {
+                    "name": "Secretaría de Extensión",
+                    "apellido": "Santiago",
+                    "nombre": "Javier Ernesto",
+                    "email": "javier.santiago@atlantida.edu.ar",
+                    "children": []
+                },
+                {
+                    "name": "Facultades",
+                    "apellido": "", "nombre": "", "email": "",
+                    "children": [
+                        { "name": "Facultad de Psicología", "apellido": "Vázquez", "nombre": "Gabriela", "email": "gabriela.vazquez@atlantida.edu.ar" },
+                        { "name": "Facultad de Derecho y Cs. Sociales", "apellido": "Zubieta", "nombre": "Daniel", "email": "daniel.zubieta@atlantida.edu.ar" },
+                        { "name": "Facultad de Cs. Económicas", "apellido": "Lazzeri", "nombre": "Santiago", "email": "santiago.lazzeri@atlantida.edu.ar" },
+                        { "name": "Facultad de Ingeniería", "apellido": "Soto", "nombre": "Emiliano", "email": "emiliano.soto@atlantida.edu.ar" }
+                    ]
+                },
+                {
+                    "name": "Gestión de las Personas (RRHH)",
+                    "apellido": "Buggiano",
+                    "nombre": "Marina",
+                    "email": "marina.buggiano@atlantida.edu.ar",
+                    "children": [
+                        { "name": "Auxiliar Reclutamiento", "apellido": "Martínez", "nombre": "Solana", "email": "solana.martinez@atlantida.edu.ar" }
+                    ]
+                }
+            ]
+        };
 
+        let currentLevelNode = coreStructure; 
         let zoomScale = 1;
         let posX = 0, posY = 0;
         let isDragging = false;
         let startX, startY;
-
-        // Tus datos exactos de la captura
-        let coreData = {
-            "divisions": [
-                { "id": "sec", "name": "Secretarías" },
-                { "id": "fac", "name": "Facultades" },
-                { "id": "inst", "name": "Institutos y Laboratorios" },
-                { "id": "deptos", "name": "Departamentos Centrales" },
-                { "id": "calidad", "name": "Evaluación y Calidad" }
-            ],
-            "generalNodes": [
-                { "id": "sub_rectorado", "name": "Rectorado", "dId": "sec", "isSubtree": true, "responsable": "ZOGBI AMADO", "email": "azogbi@atlantida.edu.ar" },
-                { "id": "sub_sec_acad", "name": "Secretaría Académica", "dId": "sec", "isSubtree": true, "responsable": "LECUNA FLORENCIA", "email": "florencia.lecunanatalizia@atlantida.edu.ar" },
-                { "id": "sub_sec_adm", "name": "Secretaría Administrativa", "dId": "sec", "isSubtree": true, "responsable": "QUINTELA MARCELO", "email": "marcelo.quintela@atlantida.edu.ar" },
-                { "id": "sub_sec_ext", "name": "Secretaría de Extensión", "dId": "sec", "isSubtree": true, "responsable": "SANTIAGO JAVIER ERNESTO", "email": "javier.santiago@atlantida.edu.ar" },
-                { "id": "sub_sec_inv", "name": "Secretaría de investigación", "dId": "sec", "isSubtree": true, "responsable": "MASTROMARINO CLARA", "email": "clara.mastromarino@atlantida.edu.ar" },
-                { "id": "sub_sec_trans_dig", "name": "Secretaría de transformación digital", "dId": "sec", "isSubtree": true, "responsable": "SOTO EMILIANO", "email": "emiliano.soto@atlantida.edu.ar" },
-                { "id": "sub_com_prensa", "name": "Comunicación y prensa", "dId": "sec", "isSubtree": true, "responsable": "NAVARRO FLORENCIA", "email": "florencia.navarro@atlantida.edu.ar" },
-                { "id": "sub_internac", "name": "Internacionalización", "dId": "sec", "isSubtree": true, "responsable": "RUIZ CONEJO GABRIELA", "email": "gabriela.ruizconejo@atlantida.edu.ar" },
-                { "id": "sub_deleg_rect", "name": "Delegados Rectorales", "dId": "sec", "isSubtree": true, "responsable": "GARCIA EDGARDO", "email": "edgardo.garcia@atlantida.edu.ar" },
-                { "id": "sub_prom_art", "name": "Área de promoción y articulación", "dId": "sec", "isSubtree": true, "responsable": "GANCEDO SUSANA", "email": "susana.gancedo@atlantida.edu.ar" },
-                { "id": "sub_sacau", "name": "SACAU", "dId": "sec", "isSubtree": true, "responsable": "LOPEZ MARIELA", "email": "mariela.lopez@atlantida.edu.ar" },
-                { "id": "sub_fac_psi", "name": "Facultad de Psicología", "dId": "fac", "isSubtree": true, "responsable": "VAZQUEZ LIC. GABRIELA", "email": "gabriela.vazquez@atlantida.edu.ar" },
-                { "id": "sub_fac_der", "name": "Facultad de Derecho", "dId": "fac", "isSubtree": true, "responsable": "ZUBIETA DANIEL", "email": "daniel.zubieta@atlantida.edu.ar" },
-                { "id": "sub_fac_eco", "name": "Facultad de Cs Economicas", "dId": "fac", "isSubtree": true, "responsable": "LAZZERI SANTIAGO", "email": "santiago.lazzeri@atlantida.edu.ar" },
-                { "id": "sub_fac_hum", "name": "Facultad de Humanidades", "dId": "fac", "isSubtree": true, "responsable": "MARINO MARCELO", "email": "marcelo.marino@atlantida.edu.ar" },
-                { "id": "sub_fac_ing", "name": "Facultad de Ingeniería", "dId": "fac", "isSubtree": true, "responsable": "SOTO ING. EMILIANO", "email": "emiliano.soto@atlantida.edu.ar" },
-                { "id": "sub_fac_arq", "name": "Facultad de Arquitectura", "dId": "fac", "isSubtree": true, "responsable": "GALERA ESTUDIO ARCH. DIEGO", "email": "diego.galera@atlantida.edu.ar" },
-                { "id": "sub_iead", "name": "IEAD", "dId": "inst", "isSubtree": true, "responsable": "DE VINCENZI GABRIELA", "email": "gabriela.devincenzi@atlantida.edu.ar" },
-                { "id": "sub_inst_geront", "name": "Instituto de Estudios Geróntológicos", "dId": "inst", "isSubtree": true, "responsable": "YUNI JOSE", "email": "jose.yuni@atlantida.edu.ar" },
-                { "id": "sub_lia", "name": "Laboratorio de inteligencias Artificiales (LIA)", "dId": "inst", "isSubtree": true, "responsable": "SOTO EMILIANO", "email": "emiliano.soto@atlantida.edu.ar" },
-                { "id": "sub_inst_sis_int", "name": "Instituto Sistemas Inteligentes", "dId": "inst", "isSubtree": true, "responsable": "SOTO EMILIANO", "email": "emiliano.soto@atlantida.edu.ar" },
-                { "id": "sub_lab_futuro", "name": "Laboratorio Futuro", "dId": "inst", "isSubtree": true, "responsable": "ZOGBI AMADO", "email": "azogbi@atlantida.edu.ar" },
-                { "id": "sub_depto_rrhh", "name": "Recursos Humanos", "dId": "deptos", "isSubtree": true, "responsable": "LAZZERI GABRIELA", "email": "gabriela.lazzeri@atlantida.edu.ar" },
-                { "id": "sub_depto_sis", "name": "Sistemas", "dId": "deptos", "isSubtree": true, "responsable": "SOTO EMILIANO", "email": "emiliano.soto@atlantida.edu.ar" },
-                { "id": "sub_depto_infra", "name": "Infraestructura", "dId": "deptos", "isSubtree": true, "responsable": "CREMONTE CRISTIAN", "email": "cristian.cremonte@atlantida.edu.ar" },
-                { "id": "sub_depto_est", "name": "Dto de Estadìstica", "dId": "deptos", "isSubtree": true, "responsable": "CÁCERES ADRIÁN", "email": "adrian.caceres@atlantida.edu.ar" },
-                { "id": "sub_depto_posg", "name": "Dto Posgrado", "dId": "deptos", "isSubtree": true, "responsable": "MASTROMARINO CLARA", "email": "clara.mastromarino@atlantida.edu.ar" },
-                { "id": "sub_calidad_cpaca", "name": "CPACA", "dId": "calidad", "isSubtree": true, "responsable": "SABELLA MARÍA JOSÉ", "email": "mariajose.sabella@atlantida.edu.ar" }
-            ],
-            "subTrees": {
-                "sub_rectorado": {
-                    "title": "Rectorado",
-                    "divisions": [{ "id": "sd_personal", "name": "Personal y Autoridades" }],
-                    "nodes": [
-                        { "id": "p_0", "name": "Rector", "dId": "sd_personal", "responsable": "ZOGBI AMADO", "email": "azogbi@atlantida.edu.ar" },
-                        { "id": "p_1", "name": "Vicerrectora", "dId": "sd_personal", "responsable": "GIL ALICIA", "email": "alicia.gil@atlantida.edu.ar" },
-                        { "id": "p_2", "name": "Secretaria de Rectorado", "dId": "sd_personal", "responsable": "BARTOLINI M. VALERIA", "email": "valeria.bartolini@atlantida.edu.ar" },
-                        { "id": "p_3", "name": "Auxiliar Administrativo", "dId": "sd_personal", "responsable": "DIODATO SOFÍA", "email": "sofia.diodato@atlantida.edu.ar" },
-                        { "id": "p_4", "name": "Secretaria de Vicerrectorado", "dId": "sd_personal", "responsable": "VILLALBA GABRIELA", "email": "gabriela.villalba@atlantida.edu.ar" }
-                    ]
-                },
-                "sub_sec_acad": {
-                    "title": "Secretaría Académica",
-                    "divisions": [{ "id": "sd_personal", "name": "Personal y Autoridades" }],
-                    "nodes": [
-                        { "id": "p_5", "name": "Secretaria Académica", "dId": "sd_personal", "responsable": "LECUNA FLORENCIA", "email": "florencia.lecunanatalizia@atlantida.edu.ar" },
-                        { "id": "p_6", "name": "Asistente de Sec Académica", "dId": "sd_personal", "responsable": "PEREZ SERGIO", "email": "sergio.perez@atlantida.edu.ar" },
-                        { "id": "p_7", "name": "Gestión de carreras", "dId": "sd_personal", "responsable": "MOSCA LUCIANA", "email": "luciana.mosca@atlantida.edu.ar" }
-                    ]
-                }
-            }
-        };
+        let currentEditingNodeRef = null;
 
         document.addEventListener('DOMContentLoaded', () => {
-            renderActiveCanvas();
+            renderTree();
             setupPanAndZoom();
         });
 
-        function renderActiveCanvas() {
-            const canvas = document.getElementById('dynamic-canvas-content');
-            canvas.innerHTML = '';
-            let currentDivisions = currentLevel === 'general' ? coreData.divisions : coreData.subTrees[currentLevel].divisions;
-            let currentNodes = currentLevel === 'general' ? coreData.generalNodes : coreData.subTrees[currentLevel].nodes;
+        // Función recursiva para dibujar las cajas en forma descendente vertical impecable
+        function buildTreeHTML(node) {
+            let html = `<div class="flex flex-col items-center mx-4 relative">`;
+            
+            // Render de la tarjeta de la persona/puesto
+            let responsableStr = (node.apellido || node.nombre) ? `${node.apellido}, ${node.nombre}` : "Vacante";
+            let emailStr = node.email ? node.email : "";
+            
+            html += `
+                <div onclick="openEditNode('${node.name}')" class="bg-white border-2 border-slate-200 hover:border-[#224289] w-60 p-4 rounded-2xl shadow-sm hover:shadow-md cursor-pointer transition-all text-center z-10 bg-white">
+                    <div class="text-xs font-extrabold text-[#224289] tracking-tight truncate">${node.name}</div>
+                    <div class="text-xs font-semibold text-slate-700 mt-1 truncate">${responsableStr}</div>
+                    <div class="text-[10px] text-slate-400 font-mono mt-0.5 truncate">${emailStr}</div>
+                </div>
+            `;
 
-            currentDivisions.forEach(div => {
-                const filteredNodes = currentNodes.filter(n => n.dId === div.id);
-                if (filteredNodes.length === 0) return;
+            // Si tiene hijos, se traza la línea vertical y se ramifican horizontalmente abajo
+            if (node.children && node.children.length > 0) {
+                html += `<div class="tree-line-v h-8 w-0.5 bg-slate-300"></div>`;
+                html += `<div class="flex items-start justify-center relative pt-2">`;
+                
+                // Línea horizontal conectora general superior para los hijos
+                if (node.children.length > 1) {
+                    html += `<div class="absolute top-0 left-0 right-0 border-t-2 border-slate-300" style="left: calc(100% / ${node.children.length} / 2); right: calc(100% / ${node.children.length} / 2);"></div>`;
+                }
 
-                const sectionEl = document.createElement('div');
-                sectionEl.className = "w-full flex flex-col items-center bg-white border border-slate-200 p-6 rounded-2xl shadow-xs gap-6";
-                sectionEl.innerHTML = `<h4 class="text-xs font-bold text-slate-400 tracking-wider uppercase">${div.name}</h4>`;
-
-                const nodeContainer = document.createElement('div');
-                nodeContainer.className = "flex flex-wrap justify-center gap-4 w-full";
-
-                filteredNodes.forEach(node => {
-                    const nodeEl = document.createElement('div');
-                    nodeEl.className = `p-4 rounded-xl border w-64 text-center shadow-xs transition-all flex flex-col justify-between min-h-[110px] ${node.isSubtree ? 'bg-blue-50/50 hover:bg-blue-50 border-blue-200 cursor-pointer' : 'bg-white border-slate-200'}`;
-                    if (node.isSubtree) nodeEl.onclick = () => navigateToLevel(node.id);
-
-                    nodeEl.innerHTML = `
-                        <div>
-                            <div class="text-xs font-bold text-[#224289]">${node.name}</div>
-                            <div class="text-xs font-medium text-slate-700 mt-1">${node.responsable || 'Vacante'}</div>
-                            <div class="text-[10px] text-slate-400 mt-0.5 truncate">${node.email || ''}</div>
-                        </div>
-                        <div class="flex items-center justify-between mt-3 pt-2 border-t border-slate-100">
-                            ${node.isSubtree ? `<span class="text-[10px] font-bold text-blue-600 bg-blue-100 px-2 py-0.5 rounded-md"><i class="fa-solid fa-folder-tree"></i> Ver área</span>` : '<span></span>'}
-                            <button onclick="event.stopPropagation(); openEditModal('${node.id}')" class="admin-only text-xs text-slate-400 hover:text-slate-700 p-1"><i class="fa-solid fa-pen"></i></button>
-                        </div>`;
-                    nodeContainer.appendChild(nodeEl);
+                node.children.forEach(child => {
+                    html += buildTreeHTML(child);
                 });
-                sectionEl.appendChild(nodeContainer);
-                canvas.appendChild(sectionEl);
-            });
-            updateBreadcrumbs();
+
+                html += `</div>`;
+            }
+
+            html += `</div>`;
+            return html;
+        }
+
+        function renderTree() {
+            const canvas = document.getElementById('dynamic-canvas-content');
+            canvas.innerHTML = buildTreeHTML(currentLevelNode);
             renderTableView();
         }
 
-        function navigateToLevel(levelId) { currentLevel = levelId; resetZoomAndPan(); renderActiveCanvas(); }
-        function updateBreadcrumbs() {
-            const crumbs = document.getElementById('breadcrumbs');
-            crumbs.innerHTML = `<span class="text-[#224289] cursor-pointer hover:underline" onclick="navigateToLevel('general')"><i class="fa-solid fa-university"></i> Organigrama General</span>`;
-            if (currentLevel !== 'general') crumbs.innerHTML += `<span class="text-slate-300">/</span><span class="text-slate-700 font-bold">${coreData.subTrees[currentLevel].title}</span>`;
+        function openEditNode(nodeName) {
+            let node = findNodeByName(currentLevelNode, nodeName);
+            if (!node) return;
+            currentEditingNodeRef = node;
+
+            document.getElementById('modal-role-name').value = node.name;
+            document.getElementById('modal-input-apellido').value = node.apellido || '';
+            document.getElementById('modal-input-nombre').value = node.nombre || '';
+            document.getElementById('modal-input-email').value = node.email || '';
+            document.getElementById('edit-modal').classList.remove('hidden');
+        }
+
+        function closeEditModal() {
+            document.getElementById('edit-modal').classList.add('hidden');
+        }
+
+        function saveAssignment() {
+            if (currentEditingNodeRef) {
+                currentEditingNodeRef.name = document.getElementById('modal-role-name').value;
+                currentEditingNodeRef.apellido = document.getElementById('modal-input-apellido').value;
+                currentEditingNodeRef.nombre = document.getElementById('modal-input-nombre').value;
+                currentEditingNodeRef.email = document.getElementById('modal-input-email').value;
+                renderTree();
+            }
+            closeEditModal();
+        }
+
+        function deleteCurrentPosition() {
+            if (currentEditingNodeRef === currentLevelNode) {
+                alert("No podés eliminar el nodo raíz principal.");
+                return;
+            }
+            removeNodeRecursively(currentLevelNode, currentEditingNodeRef.name);
+            renderTree();
+            closeEditModal();
+        }
+
+        function addNewPuestoPrompt() {
+            let pName = prompt("Nombre del nuevo puesto subordinado:");
+            if (!pName) return;
+            let targetParentName = prompt("¿De qué dependencia directa sale? (Escriba exactamente ej: Bedelía, Secretaría Académica, Rectorado...):");
+            let parentNode = findNodeByName(currentLevelNode, targetParentName);
+            
+            if (parentNode) {
+                if (!parentNode.children) parentNode.children = [];
+                parentNode.children.push({ name: pName, apellido: "", nombre: "", email: "", children: [] });
+                renderTree();
+            } else {
+                alert("No se encontró la dependencia superior indicada. Verifique las mayúsculas.");
+            }
+        }
+
+        // Buscadores de nodos en profundidad
+        function findNodeByName(root, name) {
+            if (root.name === name) return root;
+            if (root.children) {
+                for (let i = 0; i < root.children.length; i++) {
+                    let res = findNodeByName(root.children[i], name);
+                    if (res) return res;
+                }
+            }
+            return null;
+        }
+
+        function removeNodeRecursively(root, name) {
+            if (!root.children) return;
+            root.children = root.children.filter(child => child.name !== name);
+            root.children.forEach(child => removeNodeRecursively(child, name));
         }
 
         function renderTableView() {
-            const tbody = document.getElementById('table-body'); tbody.innerHTML = '';
-            let allNodes = [];
-            coreData.generalNodes.forEach(n => allNodes.push({ ...n, section: 'General' }));
-            Object.keys(coreData.subTrees).forEach(k => coreData.subTrees[k].nodes.forEach(n => allNodes.push({ ...n, section: coreData.subTrees[k].title })));
-            allNodes.forEach(node => {
-                tbody.innerHTML += `<tr class="hover:bg-slate-50 border-b border-slate-100"><td class="py-3 px-6 text-xs text-slate-500">${node.section}</td><td class="py-3 px-6 font-bold text-slate-900">${node.name}</td><td class="py-3 px-6 text-slate-700">${node.responsable || '-'}</td><td class="py-3 px-6 text-xs font-mono text-slate-400">${node.email || '-'}</td></tr>`;
-            });
+            const tbody = document.getElementById('table-body');
+            tbody.innerHTML = '';
+            function traverse(node, parentName) {
+                let resp = (node.apellido || node.nombre) ? `${node.apellido}, ${node.nombre}` : '-';
+                tbody.innerHTML += `
+                    <tr class="hover:bg-slate-50 border-b border-slate-100">
+                        <td class="py-3 px-6 text-xs text-slate-500 font-medium">${parentName}</td>
+                        <td class="py-3 px-6 font-bold text-slate-900">${node.name}</td>
+                        <td class="py-3 px-6 text-slate-700">${resp}</td>
+                        <td class="py-3 px-6 text-xs text-slate-400 font-mono">${node.email || '-'}</td>
+                    </tr>
+                `;
+                if (node.children) node.children.forEach(c => traverse(c, node.name));
+            }
+            traverse(currentLevelNode, "Raíz Universitaria");
         }
 
         function setupPanAndZoom() {
             const container = document.getElementById('tree-container');
-            container.addEventListener('mousedown', (e) => { if (e.target.closest('button, input')) return; isDragging = true; startX = e.clientX - posX; startY = e.clientY - posY; });
-            window.addEventListener('mousemove', (e) => { if (!isDragging) return; posX = e.clientX - startX; posY = e.clientY - startY; applyTransform(); });
+            container.addEventListener('mousedown', (e) => {
+                if (e.target.closest('button, input, [onclick]')) return;
+                isDragging = true;
+                startX = e.clientX - posX;
+                startY = e.clientY - posY;
+            });
+            window.addEventListener('mousemove', (e) => {
+                if (!isDragging) return;
+                posX = e.clientX - startX;
+                posY = e.clientY - startY;
+                applyTransform();
+            });
             window.addEventListener('mouseup', () => isDragging = false);
         }
-        function adjustZoom(amount) { zoomScale = Math.min(Math.max(0.4, zoomScale + amount), 1.5); document.getElementById('zoom-indicator').textContent = `${Math.round(zoomScale * 100)}%`; applyTransform(); }
-        function resetZoomAndPan() { zoomScale = 1; posX = 0; posY = 0; document.getElementById('zoom-indicator').textContent = "100%"; applyTransform(); }
-        function applyTransform() { document.getElementById('tree-canvas').style.transform = `translate(${posX}px, ${posY}px) scale(${zoomScale})`; }
 
-        function promptAdminLogin() {
-            if (isAdmin) {
-                isAdmin = false; document.body.classList.remove('is-admin');
-                document.getElementById('btn-login-status').innerHTML = '<i class="fa-solid fa-lock"></i> Acceso Editor';
-                showToast("Modo edición desactivado");
+        function adjustZoom(amount) {
+            zoomScale = Math.min(Math.max(0.3, zoomScale + amount), 1.5);
+            document.getElementById('zoom-indicator').textContent = `${Math.round(zoomScale * 100)}%`;
+            applyTransform();
+        }
+
+        function resetZoomAndPan() {
+            zoomScale = 1; posX = 0; posY = 0;
+            document.getElementById('zoom-indicator').textContent = "100%";
+            applyTransform();
+        }
+
+        function applyTransform() {
+            document.getElementById('tree-canvas').style.transform = `translate(${posX}px, ${posY}px) scale(${zoomScale})`;
+        }
+
+        function switchView(view) {
+            if (view === 'chart') {
+                document.getElementById('view-chart').classList.remove('hidden');
+                document.getElementById('view-list').classList.add('hidden');
             } else {
-                if (prompt("Contraseña corporativa:") === ADMIN_PASSWORD) {
-                    isAdmin = true; document.body.classList.add('is-admin');
-                    document.getElementById('btn-login-status').innerHTML = '<i class="fa-solid fa-lock-open"></i> Editor Activo';
-                    showToast("Acceso concedido");
-                } else { showToast("Clave incorrecta", true); }
+                document.getElementById('view-chart').classList.add('hidden');
+                document.getElementById('view-list').classList.remove('hidden');
             }
-            renderActiveCanvas();
         }
 
-        function openEditModal(nodeId) {
-            currentEditingNodeId = nodeId;
-            let node = currentLevel === 'general' ? coreData.generalNodes.find(n => n.id === nodeId) : coreData.subTrees[currentLevel].nodes.find(n => n.id === nodeId);
-            if (!node) return;
-            document.getElementById('modal-role-name').value = node.name;
-            document.getElementById('modal-input-nombre').value = node.responsable || '';
-            document.getElementById('modal-input-email').value = node.email || '';
-            document.getElementById('edit-modal').classList.remove('hidden');
+        function handleSearch(val) {
+            let q = val.toLowerCase();
+            if(!q) { renderTree(); return; }
+            let found = findNodeByName(currentLevelNode, val);
+            if(found) { openEditNode(found.name); }
         }
-        function closeEditModal() { document.getElementById('edit-modal').classList.add('hidden'); }
-        function saveAssignment() {
-            let node = currentLevel === 'general' ? coreData.generalNodes.find(n => n.id === currentEditingNodeId) : coreData.subTrees[currentLevel].nodes.find(n => n.id === currentEditingNodeId);
-            if (node) {
-                node.name = document.getElementById('modal-role-name').value;
-                node.responsable = document.getElementById('modal-input-nombre').value;
-                node.email = document.getElementById('modal-input-email').value;
-                renderActiveCanvas();
-            }
-            closeEditModal();
-        }
-        function deleteCurrentPosition() {
-            if (currentLevel === 'general') coreData.generalNodes = coreData.generalNodes.filter(n => n.id !== currentEditingNodeId);
-            else coreData.subTrees[currentLevel].nodes = coreData.subTrees[currentLevel].nodes.filter(n => n.id !== currentEditingNodeId);
-            renderActiveCanvas(); closeEditModal();
-        }
-        function addNewDivisionPrompt() {
-            let name = prompt("Nombre del puesto:"); if (!name) return;
-            let newNode = { "id": 'p_' + Date.now(), "name": name, "dId": currentLevel === 'general' ? 'sec' : coreData.subTrees[currentLevel].divisions[0].id, "responsable": "", "email": "", "isSubtree": false };
-            if (currentLevel === 'general') coreData.generalNodes.push(newNode); else coreData.subTrees[currentLevel].nodes.push(newNode);
-            renderActiveCanvas();
-        }
+
         function exportToJSON() {
-            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(coreData, null, 2));
-            const dl = document.createElement('a'); dl.setAttribute("href", dataStr); dl.setAttribute("download", "organigrama.json"); dl.click();
-        }
-        function handleSearch(q) {
-            let query = q.toLowerCase();
-            if(!query) { renderActiveCanvas(); return; }
-            let match = coreData.generalNodes.find(n => n.name.toLowerCase().includes(query));
-            if(match) { currentLevel = 'general'; renderActiveCanvas(); }
-        }
-        function switchView(v) {
-            if (v === 'chart') { document.getElementById('view-chart').classList.remove('hidden'); document.getElementById('view-list').classList.add('hidden'); }
-            else { document.getElementById('view-chart').classList.add('hidden'); document.getElementById('view-list').classList.remove('hidden'); }
-        }
-        function showToast(m, err=false) {
-            const t = document.getElementById('toast-ui'); document.getElementById('toast-message').textContent = m;
-            document.getElementById('toast-icon').innerHTML = err ? '❌' : '✅';
-            t.classList.remove('opacity-0'); setTimeout(() => t.classList.add('opacity-0'), 2000);
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(coreStructure, null, 2));
+            const dl = document.createElement('a');
+            dl.setAttribute("href", dataStr);
+            dl.setAttribute("download", "organigrama_vertical.json");
+            dl.click();
         }
     </script>
 </body>
