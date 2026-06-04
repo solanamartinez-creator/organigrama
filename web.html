@@ -4,7 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Organigrama Interactivo - Universidad Atlántida Argentina</title>
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome para iconos -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -24,6 +26,7 @@
 </head>
 <body class="min-h-screen flex flex-col overflow-x-hidden">
 
+    <!-- Barra de Herramientas Principal -->
     <section class="bg-white border-b border-slate-200 py-3.5 px-6 shadow-sm sticky top-0 z-30">
         <div class="max-w-[1700px] mx-auto flex flex-col lg:flex-row justify-between items-center gap-4">
             
@@ -37,6 +40,7 @@
                     </button>
                 </div>
                 
+                <!-- Barra de Navegación por Niveles -->
                 <div id="breadcrumbs" class="flex items-center gap-2 text-xs font-semibold text-slate-500 bg-slate-50 px-3 py-2 rounded-xl border border-slate-200">
                     <span class="text-[#224289] cursor-pointer hover:underline" onclick="navigateToLevel('general')">
                         <i class="fa-solid fa-university"></i> Organigrama General
@@ -44,6 +48,7 @@
                 </div>
             </div>
 
+            <!-- Acciones de Edición -->
             <div class="flex flex-wrap items-center justify-center gap-2 w-full lg:w-auto">
                 <button onclick="addNewDivisionPrompt()" class="admin-only bg-slate-50 hover:bg-slate-100 text-[#224289] text-xs font-bold py-2 px-3.5 rounded-lg border border-slate-200 shadow-xs">
                     <i class="fa-solid fa-circle-plus text-[#11caa0]"></i> + Nueva Sección
@@ -51,10 +56,6 @@
                 <button onclick="exportToJSON()" class="admin-only bg-slate-50 hover:bg-slate-100 text-slate-700 text-xs font-semibold py-2 px-3 rounded-lg border border-slate-200">
                     <i class="fa-solid fa-file-export text-[#224289]"></i> Exportar Estructura
                 </button>
-                <label class="admin-only bg-slate-50 hover:bg-slate-100 text-slate-700 text-xs font-semibold py-2 px-3 rounded-lg border border-slate-200 cursor-pointer">
-                    <i class="fa-solid fa-file-import text-[#224289]"></i> Importar Estructura
-                    <input type="file" id="import-file" class="hidden" onchange="importFromJSON(event)" accept=".json">
-                </label>
                 <button id="btn-login-status" onclick="promptAdminLogin()" class="bg-[#224289] hover:bg-[#1b346d] text-white text-xs font-bold py-2 px-4 rounded-lg shadow-sm transition-all">
                     <i class="fa-solid fa-lock"></i> Acceso Editor
                 </button>
@@ -69,9 +70,11 @@
         </div>
     </section>
 
+    <!-- Lienzo Principal -->
     <main class="flex-1 p-6 max-w-[1700px] mx-auto w-full flex flex-col">
         <div id="view-chart" class="flex-1 flex flex-col bg-slate-50 rounded-3xl border border-slate-200 shadow-inner overflow-hidden min-h-[650px] relative">
             
+            <!-- Controles de Zoom -->
             <div class="absolute top-4 left-4 z-20 bg-white p-2 rounded-2xl border border-slate-200 shadow-md flex items-center gap-1.5">
                 <button onclick="adjustZoom(0.1)" class="w-9 h-9 bg-slate-50 hover:bg-[#224289] text-slate-600 hover:text-white rounded-xl flex items-center justify-center border border-slate-200 transition-all">
                     <i class="fa-solid fa-magnifying-glass-plus"></i>
@@ -85,14 +88,17 @@
                 <span id="zoom-indicator" class="text-xs text-slate-600 font-bold px-2.5">100%</span>
             </div>
 
+            <!-- Canvas Arrastrable -->
             <div id="tree-container" class="w-full h-full min-h-[600px] overflow-hidden relative flex items-center justify-center canvas-grid">
                 <div id="tree-canvas" class="absolute origin-center transition-transform duration-75 ease-out p-12 flex flex-col items-center gap-12" style="transform: translate(0px, 0px) scale(1);">
                     <div id="dynamic-canvas-content" class="w-full flex flex-col items-center gap-12">
-                        </div>
+                        <!-- Aquí se dibuja el árbol por JS -->
+                    </div>
                 </div>
             </div>
         </div>
 
+        <!-- Vista de Lista Alternativa -->
         <div id="view-list" class="hidden bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-md">
             <div class="overflow-x-auto">
                 <table class="w-full text-left border-collapse">
@@ -110,6 +116,7 @@
         </div>
     </main>
 
+    <!-- Modal de Edición -->
     <div id="edit-modal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center hidden p-4">
         <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden border border-slate-100">
             <div class="bg-[#224289] p-5 text-white flex justify-between items-center">
@@ -140,25 +147,25 @@
         </div>
     </div>
 
+    <!-- Notificaciones Toast -->
     <div id="toast-ui" class="fixed bottom-6 right-6 z-50 transform translate-y-12 opacity-0 pointer-events-none transition-all duration-300 ease-out bg-white border border-slate-100 shadow-2xl p-4 rounded-2xl flex items-center gap-3.5 max-w-sm">
         <div id="toast-icon" class="text-xl"></div>
         <p id="toast-message" class="text-xs font-semibold text-slate-700"></p>
     </div>
 
+    <!-- AQUÍ SE PONE TU SCRIPT DE DATOS Y LÓGICA -->
     <script>
-        // --- CONFIGURACIÓN DE SEGURIDAD ---
         const ADMIN_PASSWORD = "universidad2026";
         let isAdmin = false;
         let currentLevel = 'general'; 
         let currentEditingNodeId = null;
 
-        // Variables de Zoom y Arrastre
         let zoomScale = 1;
         let posX = 0, posY = 0;
         let isDragging = false;
         let startX, startY;
 
-        // --- ESTRUCTURA DE DATOS UNIFICADA ---
+        // Tus datos exactos de la captura
         let coreData = {
             "divisions": [
                 { "id": "sec", "name": "Secretarías" },
@@ -195,108 +202,49 @@
                 { "id": "sub_depto_infra", "name": "Infraestructura", "dId": "deptos", "isSubtree": true, "responsable": "CREMONTE CRISTIAN", "email": "cristian.cremonte@atlantida.edu.ar" },
                 { "id": "sub_depto_est", "name": "Dto de Estadìstica", "dId": "deptos", "isSubtree": true, "responsable": "CÁCERES ADRIÁN", "email": "adrian.caceres@atlantida.edu.ar" },
                 { "id": "sub_depto_posg", "name": "Dto Posgrado", "dId": "deptos", "isSubtree": true, "responsable": "MASTROMARINO CLARA", "email": "clara.mastromarino@atlantida.edu.ar" },
-                { "id": "sub_calidad_cpaca", "name": "CPACA (Comisión permanente de autoevaluación y calidad académica)", "dId": "calidad", "isSubtree": true, "responsable": "SABELLA MARÍA JOSÉ", "email": "mariajose.sabella@atlantida.edu.ar" }
+                { "id": "sub_calidad_cpaca", "name": "CPACA", "dId": "calidad", "isSubtree": true, "responsable": "SABELLA MARÍA JOSÉ", "email": "mariajose.sabella@atlantida.edu.ar" }
             ],
             "subTrees": {
                 "sub_rectorado": {
                     "title": "Rectorado",
                     "divisions": [{ "id": "sd_personal", "name": "Personal y Autoridades" }],
                     "nodes": [
-                        { "id": "p_0", "name": "Rector", "dId": "sd_personal", "responsable": "ZOGBI AMADO", "email": "azogbi@atlantida.edu.ar", "isSubtree": false },
-                        { "id": "p_1", "name": "Vicerrectora", "dId": "sd_personal", "responsable": "GIL ALICIA", "email": "alicia.gil@atlantida.edu.ar", "isSubtree": false },
-                        { "id": "p_2", "name": "Secretaria de Rectorado", "dId": "sd_personal", "responsable": "BARTOLINI M. VALERIA", "email": "valeria.bartolini@atlantida.edu.ar", "isSubtree": false },
-                        { "id": "p_3", "name": "Auxiliar Administrativo de Rectorado", "dId": "sd_personal", "responsable": "DIODATO SOFÍA", "email": "sofia.diodato@atlantida.edu.ar", "isSubtree": false },
-                        { "id": "p_4", "name": "Secretaria de Vicerrectorado", "dId": "sd_personal", "responsable": "VILLALBA GABRIELA", "email": "gabriela.villalba@atlantida.edu.ar", "isSubtree": false }
+                        { "id": "p_0", "name": "Rector", "dId": "sd_personal", "responsable": "ZOGBI AMADO", "email": "azogbi@atlantida.edu.ar" },
+                        { "id": "p_1", "name": "Vicerrectora", "dId": "sd_personal", "responsable": "GIL ALICIA", "email": "alicia.gil@atlantida.edu.ar" },
+                        { "id": "p_2", "name": "Secretaria de Rectorado", "dId": "sd_personal", "responsable": "BARTOLINI M. VALERIA", "email": "valeria.bartolini@atlantida.edu.ar" },
+                        { "id": "p_3", "name": "Auxiliar Administrativo", "dId": "sd_personal", "responsable": "DIODATO SOFÍA", "email": "sofia.diodato@atlantida.edu.ar" },
+                        { "id": "p_4", "name": "Secretaria de Vicerrectorado", "dId": "sd_personal", "responsable": "VILLALBA GABRIELA", "email": "gabriela.villalba@atlantida.edu.ar" }
                     ]
                 },
                 "sub_sec_acad": {
                     "title": "Secretaría Académica",
                     "divisions": [{ "id": "sd_personal", "name": "Personal y Autoridades" }],
                     "nodes": [
-                        { "id": "p_5", "name": "Secretaria Académica", "dId": "sd_personal", "responsable": "LECUNA FLORENCIA", "email": "florencia.lecunanatalizia@atlantida.edu.ar", "isSubtree": false },
-                        { "id": "p_6", "name": "Asistente de Sec Académica", "dId": "sd_personal", "responsable": "PEREZ SERGIO", "email": "sergio.perez@atlantida.edu.ar", "isSubtree": false },
-                        { "id": "p_7", "name": "Gestión de carreras", "dId": "sd_personal", "responsable": "MOSCA LUCIANA", "email": "luciana.mosca@atlantida.edu.ar", "isSubtree": false },
-                        { "id": "p_8", "name": "Admisión", "dId": "sd_personal", "responsable": "ORTIZ M. FLORENCIA", "email": "admision@atlantida.edu.ar", "isSubtree": false },
-                        { "id": "p_9", "name": "Bedel Dolores", "dId": "sd_personal", "responsable": "TAMAGNO PATRICIA", "email": "patricia.tamagno@atlantida.edu.ar", "isSubtree": false },
-                        { "id": "p_10", "name": "Bedel Dolores", "dId": "sd_personal", "responsable": "BARRAGAN FLORENCIA", "email": "florencia.barragan@atlantida.edu.ar", "isSubtree": false },
-                        { "id": "p_11", "name": "Bedel MDP", "dId": "sd_personal", "responsable": "GALBAN GUILLERMO", "email": "guillermo.galban@atlantida.edu.ar", "isSubtree": false },
-                        { "id": "p_12", "name": "Bedel MDP", "dId": "sd_personal", "responsable": "PEREZ CRISTIAN", "email": "cristian.perez@atlantida.edu.ar", "isSubtree": false },
-                        { "id": "p_13", "name": "Bedel MDP", "dId": "sd_personal", "responsable": "TOSCANO LAUTARO", "email": "lautaro.toscano@atlantida.edu.ar", "isSubtree": false },
-                        { "id": "p_14", "name": "Bedel MDA", "dId": "sd_personal", "responsable": "OLAIZOLA MARCELA", "email": "marcela.olaizola@atlantida.edu.ar", "isSubtree": false },
-                        { "id": "p_15", "name": "Bedel MDA", "dId": "sd_personal", "responsable": "GIMENEZ FLAVIA", "email": "flavia.gimenez@atlantida.edu.ar", "isSubtree": false },
-                        { "id": "p_16", "name": "Bedel MDA", "dId": "sd_personal", "responsable": "HANCHEN LUCIANA", "email": "luciana.hanchen@atlantida.edu.ar", "isSubtree": false },
-                        { "id": "p_17", "name": "Bedelía Virtual", "dId": "sd_personal", "responsable": "MARQUIÑEZ RAFAEL", "email": "rafael.marquinez@atlantida.edu.ar", "isSubtree": false },
-                        { "id": "p_18", "name": "Responsable de Títulos", "dId": "sd_personal", "responsable": "SPERANZA GAVIÑA CARLA", "email": "carla.speranza@atlantida.edu.ar", "isSubtree": false },
-                        { "id": "p_19", "name": "Auxiliar de Títulos", "dId": "sd_personal", "responsable": "PEÑOÑORI MARÍA INÉS", "email": "mariaines.penonori@atlantida.edu.ar", "isSubtree": false },
-                        { "id": "p_20", "name": "División Alumnos MDA", "dId": "sd_personal", "responsable": "LUDUEÑA ROXANA PAOLA", "email": "paola.luduena@atlantida.edu.ar", "isSubtree": false },
-                        { "id": "p_21", "name": "División Alumnos MDA", "dId": "sd_personal", "responsable": "COSTA CARLA", "email": "carla.costa@atlantida.edu.ar", "isSubtree": false },
-                        { "id": "p_22", "name": "División Alumnos Dolores", "dId": "sd_personal", "responsable": "CELLILLO MARÍA", "email": "maria.cellillo@atlantida.edu.ar", "isSubtree": false },
-                        { "id": "p_23", "name": "División Alumnos MDP", "dId": "sd_personal", "responsable": "SANGUINETTI JULIETA", "email": "julieta.sanguinetti@atlantida.edu.ar", "isSubtree": false },
-                        { "id": "p_24", "name": "Biblioteca MDA", "dId": "sd_personal", "responsable": "DURAN GABRIELA", "email": "gabriela.duran@atlantida.edu.ar", "isSubtree": false },
-                        { "id": "p_25", "name": "Biblioteca Dolores", "dId": "sd_personal", "responsable": "REPETTO ESTELA", "email": "estela.repetto@atlantida.edu.ar", "isSubtree": false },
-                        { "id": "p_26", "name": "Biblioteca MDP", "dId": "sd_personal", "responsable": "CEJAS JUAN CARLOS", "email": "juancarlos.cejas@atlantida.edu.ar", "isSubtree": false },
-                        { "id": "p_27", "name": "Coordinadora de Tutores", "dId": "sd_personal", "responsable": "ABELLEIRA MERCEDES", "email": "mercedes.abelleira@atlantida.edu.ar", "isSubtree": false }
-                    ]
-                },
-                "sub_sec_adm": {
-                    "title": "Secretaría Administrativa",
-                    "divisions": [{ "id": "sd_personal", "name": "Personal y Autoridades" }],
-                    "nodes": [
-                        { "id": "p_28", "name": "Secretario de Administración", "dId": "sd_personal", "responsable": "QUINTELA MARCELO", "email": "marcelo.quintela@atlantida.edu.ar", "isSubtree": false },
-                        { "id": "p_29", "name": "Tesorera", "dId": "sd_personal", "responsable": "PAOLINI ADRIANA", "email": "adriana.paolini@atlantida.edu.ar", "isSubtree": false },
-                        { "id": "p_30", "name": "Responsable de Compras", "dId": "sd_personal", "responsable": "SARKIS MAURICIO", "email": "mauricio.sarkis@atlantida.edu.ar", "isSubtree": false },
-                        { "id": "p_31", "name": "Administrativa de compras y proveedores", "dId": "sd_personal", "responsable": "GARCIA M. FLORENCIA", "email": "florencia.garcia@atlantida.edu.ar", "isSubtree": false },
-                        { "id": "p_32", "name": "Auxiliar Contable / Liquidaciones", "dId": "sd_personal", "responsable": "RODRIGUEZ PAULA", "email": "paula.rodriguez@atlantida.edu.ar", "isSubtree": false },
-                        { "id": "p_33", "name": "Responsable de Cuentas Corrientes", "dId": "sd_personal", "responsable": "FALCONNAT CORINA", "email": "corina.falconnat@atlantida.edu.ar", "isSubtree": false },
-                        { "id": "p_34", "name": "Cuentas Corrientes MDA", "dId": "sd_personal", "responsable": "SANTANA JOAQUIN", "email": "joaquin.santana@atlantida.edu.ar", "isSubtree": false },
-                        { "id": "p_35", "name": "Cuentas Corrientes MDA", "dId": "sd_personal", "responsable": "HERNANDEZ JESSICA", "email": "jessica.hernandez@atlantida.edu.ar", "isSubtree": false },
-                        { "id": "p_36", "name": "Cuentas Corrientes Dolores", "dId": "sd_personal", "responsable": "FRANCESE PATRICIA", "email": "patricia.francese@atlantida.edu.ar", "isSubtree": false },
-                        { "id": "p_37", "name": "Cuentas Corrientes MDP", "dId": "sd_personal", "responsable": "FERREYRA LOURDES", "email": "lourdes.ferreyra@atlantida.edu.ar", "isSubtree": false },
-                        { "id": "p_38", "name": "Cuentas Corrientes MDP", "dId": "sd_personal", "responsable": "GONZALEZ CARLA", "email": "carla.gonzalez@atlantida.edu.ar", "isSubtree": false }
-                    ]
-                },
-                "sub_fac_der": {
-                    "title": "Facultad de Derecho",
-                    "divisions": [{ "id": "sd_personal", "name": "Personal y Autoridades" }],
-                    "nodes": [
-                        { "id": "p_73", "name": "Decano", "dId": "sd_personal", "responsable": "ZUBIETA DANIEL", "email": "daniel.zubieta@atlantida.edu.ar", "isSubtree": false }
+                        { "id": "p_5", "name": "Secretaria Académica", "dId": "sd_personal", "responsable": "LECUNA FLORENCIA", "email": "florencia.lecunanatalizia@atlantida.edu.ar" },
+                        { "id": "p_6", "name": "Asistente de Sec Académica", "dId": "sd_personal", "responsable": "PEREZ SERGIO", "email": "sergio.perez@atlantida.edu.ar" },
+                        { "id": "p_7", "name": "Gestión de carreras", "dId": "sd_personal", "responsable": "MOSCA LUCIANA", "email": "luciana.mosca@atlantida.edu.ar" }
                     ]
                 }
             }
         };
 
-        // --- INICIALIZACIÓN ---
         document.addEventListener('DOMContentLoaded', () => {
             renderActiveCanvas();
             setupPanAndZoom();
         });
 
-        // --- SISTEMA DE RENDERIZADO INTERACTIVO ---
         function renderActiveCanvas() {
             const canvas = document.getElementById('dynamic-canvas-content');
             canvas.innerHTML = '';
+            let currentDivisions = currentLevel === 'general' ? coreData.divisions : coreData.subTrees[currentLevel].divisions;
+            let currentNodes = currentLevel === 'general' ? coreData.generalNodes : coreData.subTrees[currentLevel].nodes;
 
-            let currentDivisions = [];
-            let currentNodes = [];
-
-            if (currentLevel === 'general') {
-                currentDivisions = coreData.divisions;
-                currentNodes = coreData.generalNodes;
-            } else {
-                const sub = coreData.subTrees[currentLevel];
-                if (sub) {
-                    currentDivisions = sub.divisions;
-                    currentNodes = sub.nodes;
-                }
-            }
-
-            // Filtrar y renderizar por Secciones/Divisiones
             currentDivisions.forEach(div => {
                 const filteredNodes = currentNodes.filter(n => n.dId === div.id);
                 if (filteredNodes.length === 0) return;
 
                 const sectionEl = document.createElement('div');
-                sectionEl.className = "w-full flex flex-col items-center bg-white border border-slate-200/80 p-6 rounded-2xl shadow-xs gap-6";
+                sectionEl.className = "w-full flex flex-col items-center bg-white border border-slate-200 p-6 rounded-2xl shadow-xs gap-6";
                 sectionEl.innerHTML = `<h4 class="text-xs font-bold text-slate-400 tracking-wider uppercase">${div.name}</h4>`;
 
                 const nodeContainer = document.createElement('div');
@@ -304,15 +252,8 @@
 
                 filteredNodes.forEach(node => {
                     const nodeEl = document.createElement('div');
-                    nodeEl.className = `p-4 rounded-xl border w-64 text-center shadow-xs transition-all flex flex-col justify-between min-h-[110px] ${
-                        node.isSubtree 
-                        ? 'bg-blue-50/50 hover:bg-blue-50 border-blue-200 hover:scale-102 cursor-pointer' 
-                        : 'bg-white hover:bg-slate-50 border-slate-200'
-                    }`;
-
-                    if (node.isSubtree) {
-                        nodeEl.onclick = () => navigateToLevel(node.id);
-                    }
+                    nodeEl.className = `p-4 rounded-xl border w-64 text-center shadow-xs transition-all flex flex-col justify-between min-h-[110px] ${node.isSubtree ? 'bg-blue-50/50 hover:bg-blue-50 border-blue-200 cursor-pointer' : 'bg-white border-slate-200'}`;
+                    if (node.isSubtree) nodeEl.onclick = () => navigateToLevel(node.id);
 
                     nodeEl.innerHTML = `
                         <div>
@@ -321,338 +262,109 @@
                             <div class="text-[10px] text-slate-400 mt-0.5 truncate">${node.email || ''}</div>
                         </div>
                         <div class="flex items-center justify-between mt-3 pt-2 border-t border-slate-100">
-                            ${node.isSubtree ? `<span class="text-[10px] font-bold text-blue-600 bg-blue-100/60 px-2 py-0.5 rounded-md"><i class="fa-solid fa-folder-tree"></i> Ver área</span>` : '<span></span>'}
-                            <button onclick="event.stopPropagation(); openEditModal('${node.id}')" class="admin-only text-xs text-slate-400 hover:text-slate-700 p-1">
-                                <i class="fa-solid fa-pen"></i>
-                            </button>
-                        </div>
-                    `;
+                            ${node.isSubtree ? `<span class="text-[10px] font-bold text-blue-600 bg-blue-100 px-2 py-0.5 rounded-md"><i class="fa-solid fa-folder-tree"></i> Ver área</span>` : '<span></span>'}
+                            <button onclick="event.stopPropagation(); openEditModal('${node.id}')" class="admin-only text-xs text-slate-400 hover:text-slate-700 p-1"><i class="fa-solid fa-pen"></i></button>
+                        </div>`;
                     nodeContainer.appendChild(nodeEl);
                 });
-
                 sectionEl.appendChild(nodeContainer);
                 canvas.appendChild(sectionEl);
             });
-
             updateBreadcrumbs();
             renderTableView();
         }
 
-        // --- RECORRIDO Y NAVEGACIÓN (BREADCRUMBS) ---
-        function navigateToLevel(levelId) {
-            currentLevel = levelId;
-            resetZoomAndPan();
+        function navigateToLevel(levelId) { currentLevel = levelId; resetZoomAndPan(); renderActiveCanvas(); }
+        function updateBreadcrumbs() {
+            const crumbs = document.getElementById('breadcrumbs');
+            crumbs.innerHTML = `<span class="text-[#224289] cursor-pointer hover:underline" onclick="navigateToLevel('general')"><i class="fa-solid fa-university"></i> Organigrama General</span>`;
+            if (currentLevel !== 'general') crumbs.innerHTML += `<span class="text-slate-300">/</span><span class="text-slate-700 font-bold">${coreData.subTrees[currentLevel].title}</span>`;
+        }
+
+        function renderTableView() {
+            const tbody = document.getElementById('table-body'); tbody.innerHTML = '';
+            let allNodes = [];
+            coreData.generalNodes.forEach(n => allNodes.push({ ...n, section: 'General' }));
+            Object.keys(coreData.subTrees).forEach(k => coreData.subTrees[k].nodes.forEach(n => allNodes.push({ ...n, section: coreData.subTrees[k].title })));
+            allNodes.forEach(node => {
+                tbody.innerHTML += `<tr class="hover:bg-slate-50 border-b border-slate-100"><td class="py-3 px-6 text-xs text-slate-500">${node.section}</td><td class="py-3 px-6 font-bold text-slate-900">${node.name}</td><td class="py-3 px-6 text-slate-700">${node.responsable || '-'}</td><td class="py-3 px-6 text-xs font-mono text-slate-400">${node.email || '-'}</td></tr>`;
+            });
+        }
+
+        function setupPanAndZoom() {
+            const container = document.getElementById('tree-container');
+            container.addEventListener('mousedown', (e) => { if (e.target.closest('button, input')) return; isDragging = true; startX = e.clientX - posX; startY = e.clientY - posY; });
+            window.addEventListener('mousemove', (e) => { if (!isDragging) return; posX = e.clientX - startX; posY = e.clientY - startY; applyTransform(); });
+            window.addEventListener('mouseup', () => isDragging = false);
+        }
+        function adjustZoom(amount) { zoomScale = Math.min(Math.max(0.4, zoomScale + amount), 1.5); document.getElementById('zoom-indicator').textContent = `${Math.round(zoomScale * 100)}%`; applyTransform(); }
+        function resetZoomAndPan() { zoomScale = 1; posX = 0; posY = 0; document.getElementById('zoom-indicator').textContent = "100%"; applyTransform(); }
+        function applyTransform() { document.getElementById('tree-canvas').style.transform = `translate(${posX}px, ${posY}px) scale(${zoomScale})`; }
+
+        function promptAdminLogin() {
+            if (isAdmin) {
+                isAdmin = false; document.body.classList.remove('is-admin');
+                document.getElementById('btn-login-status').innerHTML = '<i class="fa-solid fa-lock"></i> Acceso Editor';
+                showToast("Modo edición desactivado");
+            } else {
+                if (prompt("Contraseña corporativa:") === ADMIN_PASSWORD) {
+                    isAdmin = true; document.body.classList.add('is-admin');
+                    document.getElementById('btn-login-status').innerHTML = '<i class="fa-solid fa-lock-open"></i> Editor Activo';
+                    showToast("Acceso concedido");
+                } else { showToast("Clave incorrecta", true); }
+            }
             renderActiveCanvas();
         }
 
-        function updateBreadcrumbs() {
-            const crumbs = document.getElementById('breadcrumbs');
-            crumbs.innerHTML = `
-                <span class="text-[#224289] cursor-pointer hover:underline" onclick="navigateToLevel('general')">
-                    <i class="fa-solid fa-university"></i> Organigrama General
-                </span>
-            `;
-            if (currentLevel !== 'general') {
-                const sub = coreData.subTrees[currentLevel];
-                if (sub) {
-                    crumbs.innerHTML += `
-                        <span class="text-slate-300"><i class="fa-solid fa-chevron-right text-[10px]"></i></span>
-                        <span class="text-slate-700 font-bold">${sub.title}</span>
-                    `;
-                }
-            }
-        }
-
-        // --- VISTA ALTERNATIVA EN TABLA ---
-        function renderTableView() {
-            const tbody = document.getElementById('table-body');
-            tbody.innerHTML = '';
-
-            // Combinar todos los nodos para listado completo
-            let allNodes = [];
-            coreData.generalNodes.forEach(n => allNodes.push({ ...n, section: 'Organigrama General' }));
-
-            Object.keys(coreData.subTrees).forEach(key => {
-                const sub = coreData.subTrees[key];
-                sub.nodes.forEach(n => allNodes.push({ ...n, section: sub.title }));
-            });
-
-            allNodes.forEach(node => {
-                const tr = document.createElement('tr');
-                tr.className = "hover:bg-slate-50 border-b border-slate-100 transition-colors";
-                tr.innerHTML = `
-                    <td class="py-3 px-6 font-semibold text-slate-500 text-xs">${node.section}</td>
-                    <td class="py-3 px-6 font-bold text-slate-900">${node.name}</td>
-                    <td class="py-3 px-6 text-slate-700 font-medium">${node.responsable || '-'}</td>
-                    <td class="py-3 px-6 text-xs font-mono text-slate-500">${node.email || '-'}</td>
-                `;
-                tbody.appendChild(tr);
-            });
-        }
-
-        // --- CONTROLES DE ZOOM Y DESPLAZAMIENTO (PAN & ZOOM) ---
-        function setupPanAndZoom() {
-            const container = document.getElementById('tree-container');
-            const canvas = document.getElementById('tree-canvas');
-
-            container.addEventListener('mousedown', (e) => {
-                if (e.target.closest('button, input, select, a')) return;
-                isDragging = true;
-                startX = e.clientX - posX;
-                startY = e.clientY - posY;
-            });
-
-            window.addEventListener('mousemove', (e) => {
-                if (!isDragging) return;
-                posX = e.clientX - startX;
-                posY = e.clientY - startY;
-                applyTransform();
-            });
-
-            window.addEventListener('mouseup', () => isDragging = false);
-
-            container.addEventListener('wheel', (e) => {
-                e.preventDefault();
-                const zoomFactor = 0.05;
-                if (e.deltaY < 0) {
-                    adjustZoom(zoomFactor);
-                } else {
-                    adjustZoom(-zoomFactor);
-                }
-            }, { passive: false });
-        }
-
-        function adjustZoom(amount) {
-            zoomScale = Math.min(Math.max(0.4, zoomScale + amount), 1.8);
-            document.getElementById('zoom-indicator').textContent = `${Math.round(zoomScale * 100)}%`;
-            applyTransform();
-        }
-
-        function resetZoomAndPan() {
-            zoomScale = 1;
-            posX = 0;
-            posY = 0;
-            document.getElementById('zoom-indicator').textContent = "100%";
-            applyTransform();
-        }
-
-        function applyTransform() {
-            const canvas = document.getElementById('tree-canvas');
-            canvas.style.transform = `translate(${posX}px, ${posY}px) scale(${zoomScale})`;
-        }
-
-        // --- SEGURIDAD Y ACCESO DE EDICIÓN ---
-        function promptAdminLogin() {
-            if (isAdmin) {
-                isAdmin = false;
-                document.body.classList.remove('is-admin');
-                document.getElementById('btn-login-status').className = "bg-[#224289] hover:bg-[#1b346d] text-white text-xs font-bold py-2 px-4 rounded-lg shadow-sm";
-                document.getElementById('btn-login-status').innerHTML = '<i class="fa-solid fa-lock"></i> Acceso Editor';
-                showToast("Modo administrador desactivado", false);
-                renderActiveCanvas();
-            } else {
-                const pass = prompt("Ingrese la contraseña de edición corporativa:");
-                if (pass === ADMIN_PASSWORD) {
-                    isAdmin = true;
-                    document.body.classList.add('is-admin');
-                    document.getElementById('btn-login-status').className = "bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold py-2 px-4 rounded-lg shadow-sm";
-                    document.getElementById('btn-login-status').innerHTML = '<i class="fa-solid fa-lock-open"></i> Editor Activo';
-                    showToast("Acceso de edición concedido con éxito", false);
-                    renderActiveCanvas();
-                } else if (pass !== null) {
-                    showToast("Contraseña denegada o incorrecta", true);
-                }
-            }
-        }
-
-        // --- SISTEMA DE CRUD / MODAL DE EDICIÓN ---
         function openEditModal(nodeId) {
             currentEditingNodeId = nodeId;
-            let node = null;
-
-            if (currentLevel === 'general') {
-                node = coreData.generalNodes.find(n => n.id === nodeId);
-            } else {
-                node = coreData.subTrees[currentLevel].nodes.find(n => n.id === nodeId);
-            }
-
+            let node = currentLevel === 'general' ? coreData.generalNodes.find(n => n.id === nodeId) : coreData.subTrees[currentLevel].nodes.find(n => n.id === nodeId);
             if (!node) return;
-
             document.getElementById('modal-role-name').value = node.name;
             document.getElementById('modal-input-nombre').value = node.responsable || '';
             document.getElementById('modal-input-email').value = node.email || '';
             document.getElementById('edit-modal').classList.remove('hidden');
         }
-
-        function closeEditModal() {
-            document.getElementById('edit-modal').classList.add('hidden');
-            currentEditingNodeId = null;
-        }
-
+        function closeEditModal() { document.getElementById('edit-modal').classList.add('hidden'); }
         function saveAssignment() {
-            if (!currentEditingNodeId) return;
-
-            let node = null;
-            if (currentLevel === 'general') {
-                node = coreData.generalNodes.find(n => n.id === currentEditingNodeId);
-            } else {
-                node = coreData.subTrees[currentLevel].nodes.find(n => n.id === currentEditingNodeId);
-            }
-
+            let node = currentLevel === 'general' ? coreData.generalNodes.find(n => n.id === currentEditingNodeId) : coreData.subTrees[currentLevel].nodes.find(n => n.id === currentEditingNodeId);
             if (node) {
                 node.name = document.getElementById('modal-role-name').value;
                 node.responsable = document.getElementById('modal-input-nombre').value;
                 node.email = document.getElementById('modal-input-email').value;
-                showToast("Cambios guardados localmente", false);
                 renderActiveCanvas();
             }
             closeEditModal();
         }
-
         function deleteCurrentPosition() {
-            if (!currentEditingNodeId || !confirm("¿Seguro que deseas eliminar este nodo?")) return;
-
-            if (currentLevel === 'general') {
-                coreData.generalNodes = coreData.generalNodes.filter(n => n.id !== currentEditingNodeId);
-            } else {
-                coreData.subTrees[currentLevel].nodes = coreData.subTrees[currentLevel].nodes.filter(n => n.id !== currentEditingNodeId);
-            }
-
-            showToast("Nodo eliminado correctamente", false);
-            renderActiveCanvas();
-            closeEditModal();
+            if (currentLevel === 'general') coreData.generalNodes = coreData.generalNodes.filter(n => n.id !== currentEditingNodeId);
+            else coreData.subTrees[currentLevel].nodes = coreData.subTrees[currentLevel].nodes.filter(n => n.id !== currentEditingNodeId);
+            renderActiveCanvas(); closeEditModal();
         }
-
         function addNewDivisionPrompt() {
-            const name = prompt("Nombre del nuevo puesto/oficina:");
-            if (!name) return;
-            const resp = prompt("Nombre del responsable:");
-            const email = prompt("Email institucional:");
-
-            const newId = 'p_' + Date.now();
-            const defaultDivId = currentLevel === 'general' ? 'sec' : coreData.subTrees[currentLevel].divisions[0].id;
-
-            const newNode = {
-                "id": newId,
-                "name": name,
-                "dId": defaultDivId,
-                "responsable": resp,
-                "email": email,
-                "isSubtree": false
-            };
-
-            if (currentLevel === 'general') {
-                coreData.generalNodes.push(newNode);
-            } else {
-                coreData.subTrees[currentLevel].nodes.push(newNode);
-            }
-
-            showToast("Nueva sección agregada", false);
+            let name = prompt("Nombre del puesto:"); if (!name) return;
+            let newNode = { "id": 'p_' + Date.now(), "name": name, "dId": currentLevel === 'general' ? 'sec' : coreData.subTrees[currentLevel].divisions[0].id, "responsable": "", "email": "", "isSubtree": false };
+            if (currentLevel === 'general') coreData.generalNodes.push(newNode); else coreData.subTrees[currentLevel].nodes.push(newNode);
             renderActiveCanvas();
         }
-
-        // --- EXPORTAR E IMPORTAR CONFIGURACIÓN JSON ---
         function exportToJSON() {
             const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(coreData, null, 2));
-            const downloadAnchor = document.createElement('a');
-            downloadAnchor.setAttribute("href", dataStr);
-            downloadAnchor.setAttribute("download", "organigrama_ua_2026.json");
-            document.body.appendChild(downloadAnchor);
-            downloadAnchor.click();
-            downloadAnchor.remove();
-            showToast("Estructura exportada con éxito", false);
+            const dl = document.createElement('a'); dl.setAttribute("href", dataStr); dl.setAttribute("download", "organigrama.json"); dl.click();
         }
-
-        function importFromJSON(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                try {
-                    const importedData = JSON.parse(e.target.result);
-                    if (importedData.divisions && importedData.generalNodes) {
-                        coreData = importedData;
-                        renderActiveCanvas();
-                        showToast("Estructura importada y actualizada", false);
-                    } else {
-                        showToast("Formato de archivo no válido", true);
-                    }
-                } catch (err) {
-                    showToast("Error al procesar el archivo JSON", true);
-                }
-            };
-            reader.readAsText(file);
+        function handleSearch(q) {
+            let query = q.toLowerCase();
+            if(!query) { renderActiveCanvas(); return; }
+            let match = coreData.generalNodes.find(n => n.name.toLowerCase().includes(query));
+            if(match) { currentLevel = 'general'; renderActiveCanvas(); }
         }
-
-        // --- SISTEMA DE BÚSQUEDA GENERAL ---
-        function handleSearch(query) {
-            const q = query.toLowerCase().trim();
-            if (q === '') {
-                renderActiveCanvas();
-                return;
-            }
-
-            // Buscar coincidencias
-            let foundLevel = null;
-
-            // Buscar primero en subárboles para saber si debemos meternos a un área específica
-            for (let key in coreData.subTrees) {
-                const sub = coreData.subTrees[key];
-                const match = sub.nodes.some(n => 
-                    n.name.toLowerCase().includes(q) || 
-                    (n.responsable && n.responsable.toLowerCase().includes(q))
-                );
-                if (match) {
-                    foundLevel = key;
-                    break;
-                }
-            }
-
-            if (foundLevel) {
-                currentLevel = foundLevel;
-                renderActiveCanvas();
-            } else {
-                currentLevel = 'general';
-                renderActiveCanvas();
-            }
+        function switchView(v) {
+            if (v === 'chart') { document.getElementById('view-chart').classList.remove('hidden'); document.getElementById('view-list').classList.add('hidden'); }
+            else { document.getElementById('view-chart').classList.add('hidden'); document.getElementById('view-list').classList.remove('hidden'); }
         }
-
-        // --- SWITCH CONMUTADOR DE VISTAS ---
-        function switchView(view) {
-            if (view === 'chart') {
-                document.getElementById('view-chart').classList.remove('hidden');
-                document.getElementById('view-list').classList.add('hidden');
-                document.getElementById('tab-chart').className = "py-2 px-4 rounded-lg text-sm font-semibold bg-white text-[#224289] shadow-sm";
-                document.getElementById('tab-list').className = "py-2 px-4 rounded-lg text-sm font-semibold text-slate-600 hover:text-slate-900";
-            } else {
-                document.getElementById('view-chart').classList.add('hidden');
-                document.getElementById('view-list').classList.remove('hidden');
-                document.getElementById('tab-chart').className = "py-2 px-4 rounded-lg text-sm font-semibold text-slate-600 hover:text-slate-900";
-                document.getElementById('tab-list').className = "py-2 px-4 rounded-lg text-sm font-semibold bg-white text-[#224289] shadow-sm";
-            }
-        }
-
-        // --- NOTIFICACIONES TOAST ---
-        function showToast(message, isError = false) {
-            const toast = document.getElementById('toast-ui');
-            const icon = document.getElementById('toast-icon');
-            const msgEl = document.getElementById('toast-message');
-
-            msgEl.textContent = message;
-            if (isError) {
-                icon.innerHTML = '<i class="fa-solid fa-triangle-exclamation text-rose-500"></i>';
-            } else {
-                icon.innerHTML = '<i class="fa-solid fa-circle-check text-emerald-500"></i>';
-            }
-
-            toast.classList.remove('translate-y-12', 'opacity-0', 'pointer-events-none');
-            toast.classList.add('translate-y-0', 'opacity-100');
-
-            setTimeout(() => {
-                toast.classList.add('translate-y-12', 'opacity-0', 'pointer-events-none');
-                toast.classList.remove('translate-y-0', 'opacity-100');
-            }, 3500);
+        function showToast(m, err=false) {
+            const t = document.getElementById('toast-ui'); document.getElementById('toast-message').textContent = m;
+            document.getElementById('toast-icon').innerHTML = err ? '❌' : '✅';
+            t.classList.remove('opacity-0'); setTimeout(() => t.classList.add('opacity-0'), 2000);
         }
     </script>
 </body>
