@@ -4,7 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Organigrama Interactivo - Universidad Atlántida Argentina</title>
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome para iconos -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -24,6 +26,7 @@
 </head>
 <body class="min-h-screen flex flex-col overflow-x-hidden">
 
+    <!-- Barra de Herramientas Principal -->
     <section class="bg-white border-b border-slate-200 py-3.5 px-6 shadow-sm sticky top-0 z-30">
         <div class="max-w-[1700px] mx-auto flex flex-col lg:flex-row justify-between items-center gap-4">
             
@@ -37,6 +40,7 @@
                     </button>
                 </div>
                 
+                <!-- Barra de Navegación por Niveles (Migas de Pan) -->
                 <div id="breadcrumbs" class="flex items-center gap-2 text-xs font-semibold text-slate-500 bg-slate-50 px-3 py-2 rounded-xl border border-slate-200">
                     <span class="text-[#224289] cursor-pointer hover:underline" onclick="navigateToLevel('general')">
                         <i class="fa-solid fa-university"></i> Organigrama General
@@ -44,6 +48,7 @@
                 </div>
             </div>
 
+            <!-- Acciones de Datos Privadas / Modos de Edición -->
             <div class="flex flex-wrap items-center justify-center gap-2 w-full lg:w-auto">
                 <button onclick="addNewDivisionPrompt()" class="admin-only bg-slate-50 hover:bg-slate-100 text-[#224289] text-xs font-bold py-2 px-3.5 rounded-lg border border-slate-200 shadow-xs">
                     <i class="fa-solid fa-circle-plus text-[#11caa0]"></i> + Nueva Sección
@@ -69,11 +74,832 @@
         </div>
     </section>
 
+    <!-- Lienzo Interactivo Principal -->
     <main class="flex-1 p-6 max-w-[1700px] mx-auto w-full flex flex-col">
         <div id="view-chart" class="flex-1 flex flex-col bg-slate-50 rounded-3xl border border-slate-200 shadow-inner overflow-hidden min-h-[650px] relative">
             
+            <!-- Controles de Zoom Flotantes -->
             <div class="absolute top-4 left-4 z-20 bg-white p-2 rounded-2xl border border-slate-200 shadow-md flex items-center gap-1.5">
                 <button onclick="adjustZoom(0.1)" class="w-9 h-9 bg-slate-50 hover:bg-[#224289] text-slate-600 hover:text-white rounded-xl flex items-center justify-center border border-slate-200 transition-all">
                     <i class="fa-solid fa-magnifying-glass-plus"></i>
                 </button>
-                <button onclick="adjustZoom(-0.1)" class="w-9 h-9 bg-slate
+                <button onclick="adjustZoom(-0.1)" class="w-9 h-9 bg-slate-50 hover:bg-[#224289] text-slate-600 hover:text-white rounded-xl flex items-center justify-center border border-slate-200 transition-all">
+                    <i class="fa-solid fa-magnifying-glass-minus"></i>
+                </button>
+                <button onclick="resetZoomAndPan()" class="w-9 h-9 bg-slate-50 hover:bg-[#224289] text-slate-600 hover:text-white rounded-xl flex items-center justify-center border border-slate-200 transition-all">
+                    <i class="fa-solid fa-expand"></i>
+                </button>
+                <span id="zoom-indicator" class="text-xs text-slate-600 font-bold px-2.5">100%</span>
+            </div>
+
+            <!-- Contenedor del Canvas Arrastrable -->
+            <div id="tree-container" class="w-full h-full min-h-[600px] overflow-hidden relative flex items-center justify-center canvas-grid">
+                <div id="tree-canvas" class="absolute origin-center transition-transform duration-75 ease-out p-12 flex flex-col items-center gap-12" style="transform: translate(0px, 0px) scale(1);">
+                    <div id="dynamic-canvas-content" class="w-full flex flex-col items-center gap-12">
+                        <!-- Renderizado controlado por JavaScript -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Vista de Lista Alternativa -->
+        <div id="view-list" class="hidden bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-md">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-slate-50 border-b border-slate-200 text-xs font-bold text-slate-500 uppercase">
+                        <th class="py-4 px-6">Sección / Nivel</th>
+                        <th class="py-4 px-6">Cargo / Dependencia</th>
+                        <th class="py-4 px-6">Responsable Autoridad</th>
+                        <th class="py-4 px-6">Contacto Institucional</th>
+                    </tr>
+                </thead>
+                <tbody id="table-body" class="divide-y divide-slate-100 text-sm text-slate-700"></tbody>
+            </table>
+        </div>
+    </main>
+
+    <!-- Modal de Edición de Datos -->
+    <div id="edit-modal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center hidden p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden border border-slate-100">
+            <div class="bg-[#224289] p-5 text-white flex justify-between items-center">
+                <h3 class="font-bold text-base">Modificar Cargo Organizacional</h3>
+                <button onclick="closeEditModal()" class="text-white/70 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="p-6 space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 mb-1">Nombre del Puesto / Oficina *</label>
+                    <input type="text" id="modal-role-name" class="w-full bg-slate-50 border border-slate-200 rounded-xl py-2 px-3 text-sm focus:ring-2 focus:ring-[#224289] outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 mb-1">Nombre de la Autoridad / Responsable</label>
+                    <input type="text" id="modal-input-nombre" class="w-full bg-slate-50 border border-slate-200 rounded-xl py-2 px-3 text-sm focus:ring-2 focus:ring-[#224289] outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 mb-1">Correo Electrónico Interno</label>
+                    <input type="email" id="modal-input-email" class="w-full bg-slate-50 border border-slate-200 rounded-xl py-2 px-3 text-sm focus:ring-2 focus:ring-[#224289] outline-none">
+                </div>
+            </div>
+            <div class="bg-slate-50 p-5 flex justify-between">
+                <button onclick="deleteCurrentPosition()" id="btn-delete-node" class="bg-rose-50 hover:bg-rose-100 text-rose-600 text-xs font-bold px-3 py-2 rounded-xl">Eliminar Nodo</button>
+                <div class="flex gap-2">
+                    <button onclick="closeEditModal()" class="bg-slate-200 text-slate-700 text-xs font-bold px-4 py-2 rounded-xl">Cancelar</button>
+                    <button onclick="saveAssignment()" class="bg-[#224289] text-white text-xs font-bold px-5 py-2 rounded-xl">Guardar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast UI Notifications -->
+    <div id="toast-ui" class="fixed bottom-6 right-6 z-50 transform translate-y-12 opacity-0 pointer-events-none transition-all duration-300 ease-out bg-white border border-slate-100 shadow-2xl p-4 rounded-2xl flex items-center gap-3.5 max-w-sm">
+        <div id="toast-icon" class="text-xl"></div>
+        <p id="toast-message" class="text-xs font-semibold text-slate-700"></p>
+    </div>
+
+    <script>
+        // --- CONFIGURACIÓN DE SEGURIDAD ---
+        const ADMIN_PASSWORD = "universidad2026";
+        let isAdmin = false;
+        let currentLevel = 'general'; 
+
+        // --- ESTRUCTURA DE DATOS UNIFICADA DE LA UNIVERSIDAD ---
+        let coreData = {
+          "divisions": [
+            { "id": "sec", "name": "Secretarías" },
+            { "id": "fac", "name": "Facultades" },
+            { "id": "inst", "name": "Institutos" },
+            { "id": "lab", "name": "Laboratorios" },
+            { "id": "deptos", "name": "Departamentos Centrales" },
+            { "id": "calidad", "name": "Evaluación y Calidad" }
+          ],
+          "generalNodes": [
+            { "id": "g1", "name": "Rectorado", "dId": "sec", "responsable": "ZOGBI AMADO", "email": "azogbi@atlantida.edu.ar" },
+            { "id": "g2", "name": "Vicerrectorado", "dId": "sec", "responsable": "GIL ALICIA", "email": "alicia.gil@atlantida.edu.ar" },
+            { "id": "sub_sec_acad", "name": "Secretaría Académica", "dId": "sec", "isSubtree": true, "responsable": "LECUNA FLORENCIA", "email": "florencia.lecunanatalizia@atlantida.edu.ar" },
+            { "id": "sub_sec_adm", "name": "Secretaría Administrativa", "dId": "sec", "isSubtree": true },
+            { "id": "sub_sec_ext", "name": "Secretaría de Extensión", "dId": "sec", "isSubtree": true },
+            { "id": "sub_sec_inv", "name": "Secretaría de Investigación", "dId": "sec", "isSubtree": true },
+            { "id": "g4", "name": "Secretaría de Rectorado", "dId": "sec" },
+            { "id": "g5", "name": "Secretaría de Vicerrectorado", "dId": "sec" },
+            { "id": "sub_fac_eco", "name": "Facultad de Ciencias Económicas", "dId": "fac", "isSubtree": true },
+            { "id": "sub_fac_der", "name": "Facultad de Derecho y Cs. Social", "dId": "fac", "isSubtree": true },
+            { "id": "sub_fac_ing", "name": "Facultad de Ingeniería", "dId": "fac", "isSubtree": true },
+            { "id": "sub_fac_hum", "name": "Facultad de Humanidades", "dId": "fac", "isSubtree": true },
+            { "id": "sub_fac_arq", "name": "Facultad de Arquitectura y Urb.", "dId": "fac", "isSubtree": true },
+            { "id": "sub_fac_psi", "name": "Facultad de Psicología", "dId": "fac", "isSubtree": true },
+            { "id": "g6", "name": "Instituto de Gerontología", "dId": "inst" },
+            { "id": "sub_inst_dist", "name": "Instituto de Educación a Distancia", "dId": "inst", "isSubtree": true },
+            { "id": "g7", "name": "Instituto de DDHH", "dId": "inst" },
+            { "id": "g8", "name": "Instituto de Estadística", "dId": "inst" },
+            { "id": "g9", "name": "Instituto Mixto Economía Social UAA-CAM", "dId": "inst" },
+            { "id": "g10", "name": "Laboratorio Futuros", "dId": "lab" },
+            { "id": "g11", "name": "Laboratorio de Sistemas Inteligentes", "dId": "lab" },
+            { "id": "sub_depto_rrhh", "name": "Departamento de Recursos Humanos", "dId": "deptos", "isSubtree": true },
+            { "id": "sub_depto_sis", "name": "Departamento de Sistemas / Informática", "dId": "deptos", "isSubtree": true },
+            { "id": "g12", "name": "CPACA (Comisión Autoevaluación)", "dId": "calidad" }
+          ],
+          "subTrees": {
+            "sub_sec_acad": {
+              "title": "Secretaría Académica",
+              "divisions": [
+                { "id": "sa_1", "name": "Gestión y Alumnos" },
+                { "id": "sa_2", "name": "Bibliotecas y Apoyo" }
+              ],
+              "nodes": [
+                { "id": "sa_n2", "name": "Asistente Académico", "dId": "sa_1", "responsable": "PEREZ SERGIO ANDRES", "email": "sergio.perez@atlantida.edu.ar" },
+                { "id": "sa_n3", "name": "Gestión de Carreras", "dId": "sa_1", "responsable": "MOSCA LUCIANA", "email": "luciana.mosca@atlantida.edu.ar" },
+                { "id": "sa_n4", "name": "Admisión", "dId": "sa_1", "responsable": "ORTIZ MARIA FLORENCIA", "email": "admision@atlantida.edu.ar" },
+                { "id": "sa_n6", "name": "Gestión Académica", "dId": "sa_1" },
+                { "id": "node_1780599859335", "name": "Bedelía", "dId": "sa_1", "isSubtree": true },
+                { "id": "node_1780599991596", "name": "División alumnos", "dId": "sa_1", "isSubtree": true },
+                { "id": "node_1780600511352", "name": "Bibliotecas MDA, MDP y Dolores", "dId": "sa_2", "isSubtree": true },
+                { "id": "node_1780600521000", "name": "Depto. Biblioteca y Medios Audiovisuales", "dId": "sa_2", "isSubtree": true },
+                { "id": "node_1780600713369", "name": "División Certificaciones y Títulos", "dId": "sa_1", "responsable": "SPERANZA GAVIÑA CARLA", "email": "carla.speranza@atlantida.edu.ar", "isSubtree": true },
+                { "id": "node_1780600931376", "name": "Tutorías e Intro", "dId": "sa_1", "responsable": "ABELLEIRA MERCEDES", "email": "mercedes.abelleira@atlantida.edu.ar", "isSubtree": true }
+              ]
+            },
+            "sub_sec_adm": {
+              "title": "Secretaría Administrativa",
+              "divisions": [
+                { "id": "sad_1", "name": "Finanzas y Personal" },
+                { "id": "sad_2", "name": "Soporte e Infraestructura" }
+              ],
+              "nodes": [
+                { "id": "sad_n1", "name": "Proveedores y Compras", "dId": "sad_1" },
+                { "id": "sad_n2", "name": "Gestión Bancaria y Tesorería", "dId": "sad_1" },
+                { "id": "sad_n3", "name": "Cuentas Corrientes Estudiantes", "dId": "sad_1" },
+                { "id": "sad_n4", "name": "Liquidaciones", "dId": "sad_1" },
+                { "id": "sad_n5", "name": "Asesor Legal", "dId": "sad_2" },
+                { "id": "sad_n6", "name": "Coordinador de Infraestructura", "dId": "sad_2" },
+                { "id": "sad_n7", "name": "Personal de Mantenimiento", "dId": "sad_2" }
+              ]
+            },
+            "sub_sec_ext": {
+              "title": "Secretaría de Extensión / Articulación",
+              "divisions": [
+                { "id": "se_1", "name": "Bienestar y Cursos" },
+                { "id": "se_2", "name": "Articulación y Promoción" }
+              ],
+              "nodes": [
+                { "id": "se_n1", "name": "Departamento de Cursos y Actividades de Extensión", "dId": "se_1" },
+                { "id": "se_n2", "name": "Departamento de Bienestar Estudiantil", "dId": "se_1" },
+                { "id": "se_n3", "name": "División Deportes", "dId": "se_1" },
+                { "id": "se_n4", "name": "Departamento de Relaciones Institucionales, Ceremonial y Protocolo", "dId": "se_1" },
+                { "id": "se_n5", "name": "División Becas y Pasantías", "dId": "se_1" },
+                { "id": "se_n6", "name": "Idiomas", "dId": "se_1" },
+                { "id": "se_n7", "name": "Promoción y articulación de servicios de formación", "dId": "se_2" },
+                { "id": "se_n8", "name": "Desarrollo de nuevos proyectos e interinstitucionales", "dId": "se_2" },
+                { "id": "se_n9", "name": "Gestión de procesos intra e interinstitucionales", "dId": "se_2" },
+                { "id": "se_n10", "name": "Asesores de ingreso", "dId": "se_2" },
+                { "id": "se_n11", "name": "Articulación", "dId": "se_2" }
+              ]
+            },
+            "sub_sec_inv": {
+              "title": "Secretaría de Investigación",
+              "divisions": [
+                { "id": "si_1", "name": "Líneas de Investigación" }
+              ],
+              "nodes": [
+                { "id": "si_n1", "name": "Departamento de Evaluación y Capacitación", "dId": "si_1" },
+                { "id": "si_n2", "name": "Departamento de Publicaciones", "dId": "si_1" },
+                { "id": "si_n3", "name": "Departamento de Investigación y Desarrollo", "dId": "si_1" }
+              ]
+            },
+            "sub_inst_dist": {
+              "title": "Instituto de Educación a Distancia",
+              "divisions": [
+                { "id": "id_1", "name": "Gobierno y Gestión" },
+                { "id": "id_2", "name": "Áreas Operativas" }
+              ],
+              "nodes": [
+                { "id": "id_n1", "name": "Director/a de Educación a Distancia", "dId": "id_1" },
+                { "id": "id_n2", "name": "Coordinador/a de Educación a Distancia", "dId": "id_1" },
+                { "id": "id_n3", "name": "Consejo Asesor", "dId": "id_1" },
+                { "id": "id_n4", "name": "Área de Docencia (Enseñanza, Materiales y Tutorías)", "dId": "id_2" },
+                { "id": "id_n5", "name": "Área de Tecnología, Innovación y Soporte", "dId": "id_2" },
+                { "id": "id_n6", "name": "Área de Gestión", "dId": "id_2" }
+              ]
+            },
+            "sub_depto_sis": {
+              "title": "Departamento de Sistemas",
+              "divisions": [
+                { "id": "ds_1", "name": "Infraestructura y Código" }
+              ],
+              "nodes": [
+                { "id": "ds_n1", "name": "Soporte IT", "dId": "ds_1" },
+                { "id": "ds_n2", "name": "Programación y Desarrollo", "dId": "ds_1" },
+                { "id": "ds_n3", "name": "Técnicos", "dId": "ds_1" }
+              ]
+            },
+            "sub_depto_rrhh": {
+              "title": "Departamento de Recursos Humanos",
+              "divisions": [
+                { "id": "rh_1", "name": "Gestión Interna" },
+                { "id": "rh_2", "name": "Área Docente" }
+              ],
+              "nodes": [
+                { "id": "rh_n1", "name": "Atracción y Selección", "dId": "rh_1" },
+                { "id": "rh_n2", "name": "Capacitación y Desarrollo", "dId": "rh_1" },
+                { "id": "rh_n3", "name": "Relaciones Laborales", "dId": "rh_1" },
+                { "id": "rh_n4", "name": "Administración de Personal", "dId": "rh_1" },
+                { "id": "rh_n5", "name": "Coordinación Docentes", "dId": "rh_2" },
+                { "id": "rh_n6", "name": "Divisiones Docentes", "dId": "rh_2" }
+              ]
+            },
+            "sub_fac_eco": {
+              "title": "Facultad de Ciencias Económicas",
+              "divisions": [
+                { "id": "f_1", "name": "Gobierno" },
+                { "id": "f_2", "name": "Cuerpo Académico y Sedes" }
+              ],
+              "nodes": [
+                { "id": "fn1_eco", "name": "Decano", "dId": "f_1" },
+                { "id": "fn2_eco", "name": "Vicedecano", "dId": "f_1" },
+                { "id": "fn3_eco", "name": "Director de Carrera", "dId": "f_1" },
+                { "id": "fn4_eco", "name": "Secretario Coordinador", "dId": "f_1" },
+                { "id": "fn5_eco", "name": "Secretarios de Carrera en Sedes", "dId": "f_2" },
+                { "id": "fn6_eco", "name": "Comisiones (Asuntos Académicos, Extensión e Inv.)", "dId": "f_2" },
+                { "id": "fn7_eco", "name": "Coordinador Académico", "dId": "f_2" },
+                { "id": "fn8_eco", "name": "Tutores (Inicio, Trayectoria y Finalización)", "dId": "f_2" }
+              ]
+            },
+            "sub_fac_der": {
+              "title": "Facultad de Derecho y Ciencias Sociales",
+              "divisions": [
+                { "id": "f_1", "name": "Gobierno" },
+                { "id": "f_2", "name": "Cuerpo Académico y Sedes" }
+              ],
+              "nodes": [
+                { "id": "fn1_der", "name": "Decano", "dId": "f_1" },
+                { "id": "fn2_der", "name": "Vicedecano", "dId": "f_1" },
+                { "id": "fn3_der", "name": "Director de Carrera", "dId": "f_1" },
+                { "id": "fn4_der", "name": "Secretario Coordinador", "dId": "f_1" },
+                { "id": "fn5_der", "name": "Secretarios de Carrera en Sedes", "dId": "f_2" },
+                { "id": "fn6_der", "name": "Comisiones (Asuntos Académicos, Extensión e Inv.)", "dId": "f_2" },
+                { "id": "fn7_der", "name": "Coordinador Académico", "dId": "f_2" },
+                { "id": "fn8_der", "name": "Tutores (Inicio, Trayectoria y Finalización)", "dId": "f_2" }
+              ]
+            },
+            "sub_fac_ing": {
+              "title": "Facultad de Ingeniería",
+              "divisions": [
+                { "id": "f_1", "name": "Gobierno" },
+                { "id": "f_2", "name": "Cuerpo Académico y Sedes" }
+              ],
+              "nodes": [
+                { "id": "fn1_ing", "name": "Decano", "dId": "f_1" },
+                { "id": "fn2_ing", "name": "Vicedecano", "dId": "f_1" },
+                { "id": "fn3_ing", "name": "Director de Carrera", "dId": "f_1" },
+                { "id": "fn4_ing", "name": "Secretario Coordinador", "dId": "f_1" },
+                { "id": "fn5_ing", "name": "Secretarios de Carrera en Sedes", "dId": "f_2" },
+                { "id": "fn6_ing", "name": "Comisiones (Asuntos Académicos, Extensión e Inv.)", "dId": "f_2" },
+                { "id": "fn7_ing", "name": "Coordinador Académico", "dId": "f_2" },
+                { "id": "fn8_ing", "name": "Tutores (Inicio, Trayectoria y Finalización)", "dId": "f_2" }
+              ]
+            },
+            "sub_fac_hum": {
+              "title": "Facultad de Humanidades",
+              "divisions": [
+                { "id": "f_1", "name": "Gobierno" },
+                { "id": "f_2", "name": "Cuerpo Académico y Sedes" }
+              ],
+              "nodes": [
+                { "id": "fn1_hum", "name": "Decano", "dId": "f_1" },
+                { "id": "fn2_hum", "name": "Vicedecano", "dId": "f_1" },
+                { "id": "fn3_hum", "name": "Director de Carrera", "dId": "f_1" },
+                { "id": "fn4_hum", "name": "Secretario Coordinador", "dId": "f_1" },
+                { "id": "fn5_hum", "name": "Secretarios de Carrera en Sedes", "dId": "f_2" },
+                { "id": "fn6_hum", "name": "Comisiones (Asuntos Académicos, Extensión e Inv.)", "dId": "f_2" },
+                { "id": "fn7_hum", "name": "Coordinador Académico", "dId": "f_2" },
+                { "id": "fn8_hum", "name": "Tutores (Inicio, Trayectoria y Finalización)", "dId": "f_2" }
+              ]
+            },
+            "sub_fac_arq": {
+              "title": "Facultad de Arquitectura y Urbanismo",
+              "divisions": [
+                { "id": "f_1", "name": "Gobierno" },
+                { "id": "f_2", "name": "Cuerpo Académico y Sedes" }
+              ],
+              "nodes": [
+                { "id": "fn1_arq", "name": "Decano", "dId": "f_1" },
+                { "id": "fn2_arq", "name": "Vicedecano", "dId": "f_1" },
+                { "id": "fn3_arq", "name": "Director de Carrera", "dId": "f_1" },
+                { "id": "fn4_arq", "name": "Secretario Coordinador", "dId": "f_1" },
+                { "id": "fn5_arq", "name": "Secretarios de Carrera en Sedes", "dId": "f_2" },
+                { "id": "fn6_arq", "name": "Comisiones (Asuntos Académicos, Extensión e Inv.)", "dId": "f_2" },
+                { "id": "fn7_arq", "name": "Coordinador Académico", "dId": "f_2" },
+                { "id": "fn8_arq", "name": "Tutores (Inicio, Trayectoria y Finalización)", "dId": "f_2" }
+              ]
+            },
+            "sub_fac_psi": {
+              "title": "Facultad de Psicología",
+              "divisions": [
+                { "id": "f_1", "name": "Gobierno" },
+                { "id": "f_2", "name": "Cuerpo Académico y Sedes" }
+              ],
+              "nodes": [
+                { "id": "fn1_psi", "name": "Decano", "dId": "f_1" },
+                { "id": "fn2_psi", "name": "Vicedecano", "dId": "f_1" },
+                { "id": "fn3_psi", "name": "Director de Carrera", "dId": "f_1" },
+                { "id": "fn4_psi", "name": "Secretario Coordinador", "dId": "f_1" },
+                { "id": "fn5_psi", "name": "Secretarios de Carrera en Sedes", "dId": "f_2" },
+                { "id": "fn6_psi", "name": "Comisiones (Asuntos Académicos, Extensión e Inv.)", "dId": "f_2" },
+                { "id": "fn7_psi", "name": "Coordinador Académico", "dId": "f_2" },
+                { "id": "fn8_psi", "name": "Tutores (Inicio, Trayectoria y Finalización)", "dId": "f_2" }
+              ]
+            },
+            "node_1780599859335": {
+              "title": "Bedelía",
+              "divisions": [
+                { "id": "sd_1780599862975", "name": "Áreas Internas" }
+              ],
+              "nodes": [
+                { "id": "node_1780599911215", "name": "Bedel", "dId": "sd_1780599862975", "responsable": "OLAIZOLA MARCELA INES", "email": "marcela.olaizola@atlantida.edu.ar" },
+                { "id": "node_1780599931623", "name": "Bedelía virtual", "dId": "sd_1780599862975", "responsable": "MARQUINEZ RAFAEL", "email": "bedelia.aulavirtual@atlantida.edu.ar" },
+                { "id": "node_1780600273068", "name": "Bedelía + división alumnos", "dId": "sd_1780599862975", "responsable": "HANCHEN LUCIANA", "email": "luciana.hanchen@atlantida.edu.ar" }
+              ]
+            },
+            "node_1780599991596": {
+              "title": "División alumnos",
+              "divisions": [
+                { "id": "sd_1780599992863", "name": "Áreas Internas" }
+              ],
+              "nodes": [
+                { "id": "node_1780600112132", "name": "División alumnos", "dId": "sd_1780599992863", "responsable": "LUDUEÑA MEMBIELA ROXANA PAOLA", "email": "paola.luduena@atlantida.edu.ar" }
+              ]
+            }
+          }
+        };
+
+        let selectedNodeId = null;
+        let isPanning = false;
+        let startX, startY, translateX = 0, translateY = 0;
+        let scale = 1;
+
+        // --- INICIALIZACIÓN CON BLINDADO DE SEGURIDAD ---
+        window.addEventListener('DOMContentLoaded', () => {
+            // Limpiamos memorias viejas corruptas si existieran
+            try {
+                const savedData = localStorage.getItem('uaa_core_data_v1');
+                if (savedData) {
+                    const parsed = JSON.parse(savedData);
+                    if (parsed && parsed.generalNodes && parsed.generalNodes.length > 0) {
+                        coreData = parsed;
+                    }
+                }
+            } catch(e) { 
+                console.error("Error cargando caché, usando base limpia", e); 
+            }
+            
+            initPanAndZoom();
+            renderChart();
+            renderTable();
+        });
+
+        // --- SISTEMA DE RENDERIZADO DEL ORGANIGRAMA ---
+        function renderChart() {
+            const container = document.getElementById('dynamic-canvas-content');
+            if (!container) return;
+            container.innerHTML = '';
+
+            let currentLevelData = (currentLevel === 'general') ? { title: "Universidad Atlántida Argentina", divisions: coreData.divisions, nodes: coreData.generalNodes } : coreData.subTrees[currentLevel];
+            
+            if (!currentLevelData) return;
+
+            // Render Titulo Contextual
+            const headContainer = document.createElement('div');
+            headContainer.className = "text-center mb-4";
+            headContainer.innerHTML = `<h1 class="text-3xl font-extrabold text-[#224289] tracking-tight">${currentLevelData.title || currentLevelData.name}</h1>
+            <p class="text-slate-400 text-xs mt-1 font-semibold uppercase tracking-wider">Estructura Organizativa Autorizada</p>`;
+            container.appendChild(headContainer);
+
+            // Contenedor de Divisiones Columnas
+            const divWrapper = document.createElement('div');
+            divWrapper.className = "flex flex-wrap items-start justify-center gap-12 w-full";
+
+            currentLevelData.divisions.forEach(division => {
+                const divColumn = document.createElement('div');
+                divColumn.className = "flex flex-col items-center gap-5 min-w-[280px] bg-white/40 p-4 rounded-3xl border border-slate-200/50 backdrop-blur-xs";
+                
+                divColumn.innerHTML = `<div class="w-full text-center pb-2.5 border-b border-slate-200/60 flex justify-between items-center px-1">
+                    <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">${division.name}</span>
+                    <button onclick="deleteDivisionPrompt('${division.id}')" class="admin-only text-slate-300 hover:text-rose-500 text-xs transition-colors"><i class="fa-solid fa-trash"></i></button>
+                </div>`;
+
+                const nodesContainer = document.createElement('div');
+                nodesContainer.className = "w-full flex flex-col gap-4";
+
+                const matchingNodes = currentLevelData.nodes.filter(n => n.dId === division.id);
+                matchingNodes.forEach(node => {
+                    const card = document.createElement('div');
+                    card.className = `w-full bg-white border border-slate-200 rounded-2xl p-4 shadow-xs hover:shadow-md transition-all relative group flex flex-col justify-between min-h-[95px] ${node.isSubtree ? 'ring-2 ring-offset-2 ring-[#224289]/10' : ''}`;
+                    
+                    let nodeMeta = ``;
+                    if (node.responsable) {
+                        nodeMeta += `<div class="mt-2 pt-2 border-t border-slate-100 flex flex-col gap-0.5 text-left">
+                            <span class="text-[11px] font-bold text-slate-700"><i class="fa-solid fa-user text-slate-400 mr-1"></i> ${node.responsable}</span>
+                            ${node.email ? `<span class="text-[10px] text-slate-400 truncate"><i class="fa-solid fa-envelope mr-1"></i> ${node.email}</span>` : ''}
+                        </div>`;
+                    }
+
+                    card.innerHTML = `
+                        <div class="text-left pr-6">
+                            <h4 class="font-bold text-slate-800 text-sm leading-snug">${node.name}</h4>
+                        </div>
+                        ${nodeMeta}
+                        <div class="absolute top-3 right-3 flex items-center gap-1.5 opacity-40 group-hover:opacity-100 transition-opacity">
+                            <button onclick="openEditModal('${node.id}')" class="admin-only text-slate-400 hover:text-[#224289] text-xs"><i class="fa-solid fa-pen"></i></button>
+                            ${node.isSubtree ? `<button onclick="navigateToLevel('${node.id}')" class="text-[#224289] hover:text-[#1b346d] text-xs font-bold bg-slate-100 px-1.5 py-0.5 rounded-md"><i class="fa-solid fa-arrow-turn-down"></i></button>` : ''}
+                        </div>
+                    `;
+                    nodesContainer.appendChild(card);
+                });
+
+                // Boton agregar nodo a division
+                const addNodeBtn = document.createElement('button');
+                addNodeBtn.className = "admin-only w-full py-2 border-2 border-dashed border-slate-200 hover:border-[#224289] rounded-xl flex items-center justify-center text-xs font-bold text-slate-400 hover:text-[#224289] transition-all bg-white/50";
+                addNodeBtn.innerHTML = `<i class="fa-solid fa-plus mr-1"></i> Añadir Puesto`;
+                addNodeBtn.onclick = () => createNewPosition(division.id);
+                
+                divColumn.appendChild(nodesContainer);
+                divColumn.appendChild(addNodeBtn);
+                divWrapper.appendChild(divColumn);
+            });
+
+            container.appendChild(divWrapper);
+            updateBreadcrumbs();
+        }
+
+        function renderTable() {
+            const tbody = document.getElementById('table-body');
+            if(!tbody) return;
+            tbody.innerHTML = '';
+
+            coreData.generalNodes.forEach(node => {
+                const div = coreData.divisions.find(d => d.id === node.dId);
+                appendRow(tbody, "General / " + (div?.name || ""), node);
+
+                if (node.isSubtree && coreData.subTrees[node.id]) {
+                    const st = coreData.subTrees[node.id];
+                    st.nodes.forEach(subNode => {
+                        const subDiv = st.divisions.find(sd => sd.id === subNode.dId);
+                        appendRow(tbody, `${node.name} / ${subDiv?.name || ""}`, subNode, true);
+                    });
+                }
+            });
+        }
+
+        function appendRow(tbody, scope, node, isSub = false) {
+            const tr = document.createElement('tr');
+            tr.className = "hover:bg-slate-50/80 transition-colors";
+            tr.innerHTML = `
+                <td class="py-3.5 px-6 font-medium text-slate-400 text-xs">${scope}</td>
+                <td class="py-3.5 px-6 font-semibold text-slate-800 ${isSub ? 'pl-10 text-slate-600' : ''}">
+                    ${isSub ? '└ ' : ''}${node.name}
+                </td>
+                <td class="py-3.5 px-6 text-slate-600 font-medium">${node.responsable || '<span class="text-slate-300 italic text-xs">Sin asignar</span>'}</td>
+                <td class="py-3.5 px-6 text-xs font-mono text-[#224289]">${node.email || '-'}</td>
+            `;
+            tbody.appendChild(tr);
+        }
+
+        // --- CONTROL DE NAVEGACIÓN ---
+        function navigateToLevel(levelId) {
+            currentLevel = levelId;
+            renderChart();
+            resetZoomAndPan();
+        }
+
+        function updateBreadcrumbs() {
+            const crumbs = document.getElementById('breadcrumbs');
+            if (!crumbs) return;
+            crumbs.innerHTML = `<span class="text-[#224289] cursor-pointer hover:underline" onclick="navigateToLevel('general')"><i class="fa-solid fa-university"></i> Organigrama General</span>`;
+            
+            if (currentLevel !== 'general') {
+                let path = [];
+                let current = currentLevel;
+
+                let parentNode = coreData.generalNodes.find(n => n.id === current);
+                if (parentNode) {
+                    path.push(parentNode);
+                } else {
+                    Object.keys(coreData.subTrees).forEach(k => {
+                        let n = coreData.subTrees[k].nodes.find(subN => subN.id === current);
+                        if (n) path.push(n);
+                    });
+                }
+
+                path.reverse().forEach(p => {
+                    crumbs.innerHTML += ` <i class="fa-solid fa-chevron-right text-[9px] text-slate-300"></i> <span class="text-slate-800">${p.name}</span>`;
+                });
+            }
+        }
+
+        // --- MODAL DE EDICIÓN ---
+        function openEditModal(nodeId) {
+            selectedNodeId = nodeId;
+            let node = null;
+            if (coreData.subTrees[currentLevel]) {
+                node = coreData.subTrees[currentLevel].nodes.find(n => n.id === nodeId);
+            } else {
+                node = coreData.generalNodes.find(n => n.id === nodeId);
+            }
+
+            if (!node) return;
+
+            document.getElementById('modal-role-name').value = node.name || '';
+            document.getElementById('modal-input-nombre').value = node.responsable || '';
+            document.getElementById('modal-input-email').value = node.email || '';
+            document.getElementById('edit-modal').classList.remove('hidden');
+        }
+
+        function closeEditModal() {
+            document.getElementById('edit-modal').classList.add('hidden');
+            selectedNodeId = null;
+        }
+
+        function saveAssignment() {
+            if (!selectedNodeId) return;
+
+            let node = null;
+            if (currentLevel === 'general') {
+                node = coreData.generalNodes.find(n => n.id === selectedNodeId);
+            } else {
+                node = coreData.subTrees[currentLevel].nodes.find(n => n.id === selectedNodeId);
+            }
+
+            if (node) {
+                node.name = document.getElementById('modal-role-name').value;
+                node.responsable = document.getElementById('modal-input-nombre').value;
+                node.email = document.getElementById('modal-input-email').value;
+
+                if (node.isSubtree && !coreData.subTrees[node.id]) {
+                    coreData.subTrees[node.id] = {
+                        title: node.name,
+                        divisions: [{ id: "sd_" + Date.now(), name: "Áreas Internas" }],
+                        nodes: []
+                    };
+                }
+
+                saveState();
+                renderChart();
+                renderTable();
+                showToast("Cambios guardados.");
+            }
+            closeEditModal();
+        }
+
+        function createNewPosition(divisionId) {
+            const newNode = {
+                id: "node_" + Date.now(),
+                name: "Nuevo Cargo",
+                dId: divisionId,
+                responsable: "",
+                email: "",
+                isSubtree: false
+            };
+
+            if (currentLevel === 'general') {
+                coreData.generalNodes.push(newNode);
+            } else {
+                coreData.subTrees[currentLevel].nodes.push(newNode);
+            }
+
+            saveState();
+            renderChart();
+            renderTable();
+        }
+
+        function deleteCurrentPosition() {
+            if (!selectedNodeId) return;
+            if (confirm("¿Eliminar este cargo organizativo?")) {
+                if (currentLevel === 'general') {
+                    coreData.generalNodes = coreData.generalNodes.filter(n => n.id !== selectedNodeId);
+                } else {
+                    coreData.subTrees[currentLevel].nodes = coreData.subTrees[currentLevel].nodes.filter(n => n.id !== selectedNodeId);
+                }
+                saveState();
+                renderChart();
+                renderTable();
+                closeEditModal();
+                showToast("Nodo eliminado.", true);
+            }
+        }
+
+        function addNewDivisionPrompt() {
+            const name = prompt("Nombre de la sección / columna:");
+            if (!name) return;
+            const newDiv = { id: "div_" + Date.now(), name: name };
+
+            if (currentLevel === 'general') {
+                coreData.divisions.push(newDiv);
+            } else {
+                coreData.subTrees[currentLevel].divisions.push(newDiv);
+            }
+            saveState();
+            renderChart();
+        }
+
+        function deleteDivisionPrompt(divId) {
+            if (confirm("¿Eliminar columna?")) {
+                if (currentLevel === 'general') {
+                    coreData.divisions = coreData.divisions.filter(d => d.id !== divId);
+                } else {
+                    coreData.subTrees[currentLevel].divisions = coreData.subTrees[currentLevel].divisions.filter(d => d.id !== divId);
+                }
+                saveState();
+                renderChart();
+            }
+        }
+
+        function saveState() {
+            localStorage.setItem('uaa_core_data_v1', JSON.stringify(coreData));
+        }
+
+        // --- ACCESO ADMIN ---
+        function promptAdminLogin() {
+            if (isAdmin) {
+                isAdmin = false;
+                document.body.classList.remove('is-admin');
+                document.getElementById('btn-login-status').innerHTML = `<i class="fa-solid fa-lock"></i> Acceso Editor`;
+                showToast("Modo editor desactivado.");
+                renderChart();
+            } else {
+                const pass = prompt("Introduzca la clave del administrador:");
+                if (pass === ADMIN_PASSWORD) {
+                    isAdmin = true;
+                    document.body.classList.add('is-admin');
+                    document.getElementById('btn-login-status').innerHTML = `<i class="fa-solid fa-lock-open text-[#11caa0]"></i> Salir Editor`;
+                    showToast("Autenticado correctamente.");
+                    renderChart();
+                } else if (pass !== null) {
+                    alert("Clave incorrecta.");
+                }
+            }
+        }
+
+        function exportToJSON() {
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(coreData, null, 2));
+            const downloadAnchor = document.createElement('a');
+            downloadAnchor.setAttribute("href", dataStr);
+            downloadAnchor.setAttribute("download", "organigrama_uaa.json");
+            document.body.appendChild(downloadAnchor);
+            downloadAnchor.click();
+            downloadAnchor.remove();
+        }
+
+        function importFromJSON(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const importedData = JSON.parse(e.target.result);
+                    if (importedData.divisions && importedData.generalNodes) {
+                        coreData = importedData;
+                        saveState();
+                        renderChart();
+                        renderTable();
+                        showToast("Importado correctamente.");
+                    }
+                } catch(err) {
+                    alert("Error leyendo el archivo.");
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        // --- INTERACCIONES DE ZOOM Y ARRASTRE ---
+        function initPanAndZoom() {
+            const container = document.getElementById('tree-container');
+            if(!container) return;
+
+            container.addEventListener('mousedown', (e) => {
+                if (e.target.closest('button') || e.target.closest('input')) return;
+                isPanning = true;
+                container.style.cursor = 'grabbing';
+                startX = e.clientX - translateX;
+                startY = e.clientY - translateY;
+            });
+
+            window.addEventListener('mousemove', (e) => {
+                if (!isPanning) return;
+                translateX = e.clientX - startX;
+                translateY = e.clientY - startY;
+                applyTransform();
+            });
+
+            window.addEventListener('mouseup', () => {
+                isPanning = false;
+                container.style.cursor = 'grab';
+            });
+        }
+
+        function adjustZoom(delta) {
+            scale = Math.min(Math.max(0.5, scale + delta), 1.5);
+            applyTransform();
+        }
+
+        function resetZoomAndPan() {
+            scale = 1.0;
+            translateX = 0;
+            translateY = 0;
+            applyTransform();
+        }
+
+        function applyTransform() {
+            const canvas = document.getElementById('tree-canvas');
+            const indicator = document.getElementById('zoom-indicator');
+            if(canvas) canvas.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scale})`;
+            if(indicator) indicator.textContent = `${Math.round(scale * 100)}%`;
+        }
+
+        function switchView(view) {
+            const btnChart = document.getElementById('tab-chart');
+            const btnList = document.getElementById('tab-list');
+            const viewChart = document.getElementById('view-chart');
+            const viewList = document.getElementById('view-list');
+
+            if (view === 'chart') {
+                viewChart.classList.remove('hidden');
+                viewList.classList.add('hidden');
+                btnChart.className = "py-2 px-4 rounded-lg text-sm font-semibold bg-white text-[#224289] shadow-sm";
+                btnList.className = "py-2 px-4 rounded-lg text-sm font-semibold text-slate-600 hover:text-slate-900";
+            } else {
+                viewChart.classList.add('hidden');
+                viewList.classList.remove('hidden');
+                btnList.className = "py-2 px-4 rounded-lg text-sm font-semibold bg-white text-[#224289] shadow-sm";
+                btnChart.className = "py-2 px-4 rounded-lg text-sm font-semibold text-slate-600 hover:text-slate-900";
+                renderTable();
+            }
+        }
+
+        // --- BUSCADOR ---
+        function handleSearch(query) {
+            const q = query.toLowerCase().trim();
+            if (!q) {
+                renderChart();
+                return;
+            }
+
+            const container = document.getElementById('dynamic-canvas-content');
+            if(!container) return;
+            container.innerHTML = `<h1 class="text-2xl font-bold text-slate-800 mb-6">Resultados: "${query}"</h1>`;
+            
+            const resultsGrid = document.createElement('div');
+            resultsGrid.className = "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full max-w-4xl";
+
+            coreData.generalNodes.forEach(n => {
+                if (n.name.toLowerCase().includes(q) || (n.responsable && n.responsable.toLowerCase().includes(q))) {
+                    resultsGrid.appendChild(createStaticCard(n, "Organigrama General"));
+                }
+            });
+
+            Object.keys(coreData.subTrees).forEach(key => {
+                const st = coreData.subTrees[key];
+                st.nodes.forEach(n => {
+                    if (n.name.toLowerCase().includes(q) || (n.responsable && n.responsable.toLowerCase().includes(q))) {
+                        resultsGrid.appendChild(createStaticCard(n, `Subnivel: ${st.title}`));
+                    }
+                });
+            });
+
+            if (resultsGrid.children.length === 0) {
+                container.innerHTML += `<p class="text-slate-400 text-sm italic">No hay coincidencias.</p>`;
+            } else {
+                container.appendChild(resultsGrid);
+            }
+        }
+
+        function createStaticCard(node, location) {
+            const div = document.createElement('div');
+            div.className = "bg-white border border-slate-200 rounded-2xl p-5 shadow-xs text-left";
+            div.innerHTML = `
+                <span class="text-[10px] font-bold text-[#224289] bg-slate-100 px-2 py-0.5 rounded-md uppercase tracking-wider">${location}</span>
+                <h4 class="font-bold text-slate-800 text-base mt-2">${node.name}</h4>
+                ${node.responsable ? `<p class="text-xs font-bold text-slate-600 mt-2"><i class="fa-solid fa-user text-slate-400 mr-1"></i> ${node.responsable}</p>` : ''}
+                ${node.email ? `<p class="text-[11px] font-mono text-slate-400 mt-0.5"><i class="fa-solid fa-envelope mr-1"></i> ${node.email}</p>` : ''}
+            `;
+            return div;
+        }
+
+        function showToast(message, isError = false) {
+            const toast = document.getElementById('toast-ui');
+            const icon = document.getElementById('toast-icon');
+            const msgEl = document.getElementById('toast-message');
+            if(!toast || !icon || !msgEl) return;
+
+            msgEl.textContent = message;
+            icon.innerHTML = isError ? '<i class="fa-solid fa-triangle-exclamation text-rose-500"></i>' : '<i class="fa-solid fa-circle-check text-[#11caa0]"></i>';
+
+            toast.classList.remove('translate-y-12', 'opacity-0', 'pointer-events-none');
+            toast.classList.add('translate-y-0', 'opacity-100');
+
+            setTimeout(() => {
+                toast.classList.add('translate-y-12', 'opacity-0', 'pointer-events-none');
+                toast.classList.remove('translate-y-0', 'opacity-100');
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
