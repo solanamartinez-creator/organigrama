@@ -3,61 +3,447 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Organigrama Universidad Atlántida - Modo Admin</title>
+    <title>Organigrama Interactivo Controlado</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
-        .canvas-grid { 
-            background-size: 24px 24px; 
-            background-image: radial-gradient(circle, #cbd5e1 1.2px, transparent 1.2px); 
+        #tree-container { user-select: none; cursor: grab; }
+        #tree-container:active { cursor: grabbing; }
+        .canvas-grid {
+            background-size: 24px 24px;
+            background-image: radial-gradient(circle, #cbd5e1 1.2px, transparent 1.2px);
+            background-color: #f8fafc;
         }
-        
-        /* OBLIGAR A MOSTRAR LA BARRA SI O SÍ Y DARLE UN DISEÑO LLAMATIVO */
-        .fuerza-scroll {
-            overflow-x: scroll !important; /* Fuerza la aparición de la barra horizontal */
-            overflow-y: auto;
-        }
-        .fuerza-scroll::-webkit-scrollbar {
-            height: 14px; /* Un poco más gruesa para que sea fácil de agarrar */
-        }
-        .fuerza-scroll::-webkit-scrollbar-track {
-            background: #e2e8f0;
-            border-radius: 10px;
-        }
-        .fuerza-scroll::-webkit-scrollbar-thumb {
-            background: #a6b9d0;
-            border-radius: 10px;
-            border: 3px solid #e2e8f0;
-        }
-        .fuerza-scroll::-webkit-scrollbar-thumb:hover {
-            background: #224289; /* Se vuelve azul cuando le pasás el mouse por arriba */
-        }
-        
-        /* Cursor de mano para arrastrar */
-        .grab-canvas { cursor: grab; }
-        .grab-canvas:active { cursor: grabbing; }
-
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        .animate-fade-in { animation: fadeIn 0.3s ease-out forwards; }
+        .admin-only { display: none !important; }
+        body.is-admin .admin-only { display: flex !important; }
+        body.is-admin .admin-only-block { display: block !important; }
     </style>
 </head>
-<body class="min-h-screen flex flex-col overflow-x-hidden" onload="initOrganigrama()">
+<body class="min-h-screen flex flex-col overflow-x-hidden">
 
     <section class="bg-white border-b border-slate-200 py-3.5 px-6 shadow-sm sticky top-0 z-30">
         <div class="max-w-[1700px] mx-auto flex flex-col lg:flex-row justify-between items-center gap-4">
             
             <div class="flex flex-col md:flex-row items-center gap-4 w-full lg:w-auto">
-                <div class="flex bg-slate-100 p-1 rounded-xl w-full md:w-auto">
-                    <button id="tab-chart" onclick="switchView('chart')" class="flex-1 md:flex-none py-2 px-4 rounded-lg text-sm font-semibold bg-white text-[#224289] shadow-sm">
+                <div class="flex bg-slate-100 p-1 rounded-xl">
+                    <button id="tab-chart" onclick="switchView('chart')" class="py-2 px-4 rounded-lg text-sm font-semibold bg-white text-[#224289] shadow-sm">
                         <i class="fa-solid fa-sitemap"></i> Vista de Árbol
                     </button>
-                    <button id="tab-list" onclick="switchView('list')" class="flex-1 md:flex-none py-2 px-4 rounded-lg text-sm font-semibold text-slate-600">
-                        <i class="fa-solid fa-table-list"></i> Vista de Planilla / Búsqueda
+                    <button id="tab-list" onclick="switchView('list')" class="py-2 px-4 rounded-lg text-sm font-semibold text-slate-600 hover:text-slate-900">
+                        <i class="fa-solid fa-table-list"></i> Lista / Búsqueda
                     </button>
                 </div>
-                <button onclick="solicitarAccesoAdmin()" class="text-xs text-slate-400 hover:text-[#224289] font-medium transition">
-                    <i class="fa-solid fa-lock">
+                
+                <div id="breadcrumbs" class="flex items-center gap-2 text-xs font-semibold text-slate-500 bg-slate-50 px-3 py-2 rounded-xl border border-slate-200">
+                    <span class="text-[#224289] cursor-pointer" onclick="navigateToLevel('general')"><i class="fa-solid fa-house"></i> General</span>
+                </div>
+            </div>
+
+            <div class="flex flex-wrap items-center justify-center gap-2 w-full lg:w-auto">
+                <button onclick="addNewDivisionPrompt()" class="admin-only bg-slate-50 hover:bg-slate-100 text-[#224289] text-xs font-bold py-2 px-3.5 rounded-lg border border-slate-200 shadow-xs">
+                    <i class="fa-solid fa-circle-plus text-[#11caa0]"></i> + Nueva Columna
+                </button>
+                <button onclick="exportToJSON()" class="admin-only bg-slate-50 hover:bg-slate-100 text-slate-700 text-xs font-semibold py-2 px-3 rounded-lg border border-slate-200">
+                    <i class="fa-solid fa-file-export text-[#224289]"></i> Exportar Backup
+                </button>
+                <label class="admin-only bg-slate-50 hover:bg-slate-100 text-slate-700 text-xs font-semibold py-2 px-3 rounded-lg border border-slate-200 cursor-pointer">
+                    <i class="fa-solid fa-file-import text-[#224289]"></i> Importar Backup
+                    <input type="file" id="import-file" class="hidden" onchange="importFromJSON(event)" accept=".json">
+                </label>
+                <button id="btn-login-status" onclick="promptAdminLogin()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold py-2 px-3.5 rounded-lg border border-slate-200 transition-all">
+                    <i class="fa-solid fa-lock"></i> Acceso Editor
+                </button>
+            </div>
+
+            <div class="relative w-full lg:w-80">
+                <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                </span>
+                <input type="text" id="search-input" oninput="handleSearch(this.value)" placeholder="Buscar puesto o personal..." class="w-full bg-slate-50 border border-slate-200 rounded-xl py-2 pl-10 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-[#224289]">
+            </div>
+        </div>
+    </section>
+
+    <main class="flex-1 p-6 max-w-[1700px] mx-auto w-full flex flex-col">
+        <div id="view-chart" class="flex-1 flex flex-col bg-slate-50 rounded-3xl border border-slate-200 shadow-inner overflow-hidden min-h-[600px] relative">
+            
+            <div class="absolute top-4 left-4 z-20 bg-white p-2 rounded-2xl border border-slate-200 shadow-md flex items-center gap-1.5">
+                <button onclick="adjustZoom(0.1)" class="w-9 h-9 bg-slate-50 hover:bg-[#224289] text-slate-600 hover:text-white rounded-xl flex items-center justify-center border border-slate-200 transition-all">
+                    <i class="fa-solid fa-magnifying-glass-plus"></i>
+                </button>
+                <button onclick="adjustZoom(-0.1)" class="w-9 h-9 bg-slate-50 hover:bg-[#224289] text-slate-600 hover:text-white rounded-xl flex items-center justify-center border border-slate-200 transition-all">
+                    <i class="fa-solid fa-magnifying-glass-minus"></i>
+                </button>
+                <button onclick="resetZoomAndPan()" class="w-9 h-9 bg-slate-50 hover:bg-[#224289] text-slate-600 hover:text-white rounded-xl flex items-center justify-center border border-slate-200 transition-all">
+                    <i class="fa-solid fa-expand"></i>
+                </button>
+                <span id="zoom-indicator" class="text-xs text-slate-600 font-bold px-2.5">100%</span>
+            </div>
+
+            <div id="tree-container" class="w-full h-full min-h-[580px] overflow-hidden relative flex items-center justify-center canvas-grid">
+                <div id="tree-canvas" class="absolute origin-center transition-transform duration-75 ease-out p-12 flex flex-col items-center gap-12" style="transform: translate(0px, 0px) scale(1);">
+                    <svg id="tree-connections" class="absolute inset-0 pointer-events-none w-full h-full z-0 overflow-visible"></svg>
+                    <div id="dynamic-canvas-content" class="w-full flex flex-col items-center gap-12">
+                        </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="view-list" class="hidden bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-md">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-slate-50 border-b border-slate-200 text-xs font-bold text-slate-500 uppercase">
+                        <th class="py-4 px-6">Área / Columna</th>
+                        <th class="py-4 px-6">Puesto</th>
+                        <th class="py-4 px-6">Responsable</th>
+                        <th class="py-4 px-6">Email</th>
+                    </tr>
+                </thead>
+                <tbody id="table-body" class="divide-y divide-slate-100 text-sm text-slate-700"></tbody>
+            </table>
+        </div>
+    </main>
+
+    <div id="edit-modal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center hidden p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden border border-slate-100">
+            <div class="bg-[#224289] p-5 text-white flex justify-between items-center">
+                <h3 class="font-bold text-base">Modificar Elemento del Organigrama</h3>
+                <button onclick="closeEditModal()" class="text-white/70 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="p-6 space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 mb-1">Nombre del Puesto / Rama *</label>
+                    <input type="text" id="modal-role-name" class="w-full bg-slate-50 border border-slate-200 rounded-xl py-2 px-3 text-sm">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 mb-1">Nombre Completo del Responsable</label>
+                    <input type="text" id="modal-input-nombre" class="w-full bg-slate-50 border border-slate-200 rounded-xl py-2 px-3 text-sm">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 mb-1">Email de Contacto</label>
+                    <input type="email" id="modal-input-email" class="w-full bg-slate-50 border border-slate-200 rounded-xl py-2 px-3 text-sm">
+                </div>
+            </div>
+            <div class="bg-slate-50 p-5 flex justify-between">
+                <button onclick="deleteCurrentPosition()" id="btn-delete-node" class="bg-rose-50 hover:bg-rose-100 text-rose-600 text-xs font-bold px-3 py-2 rounded-xl">Eliminar Nodo</button>
+                <div class="flex gap-2">
+                    <button onclick="closeEditModal()" class="bg-slate-200 text-slate-700 text-xs font-bold px-4 py-2 rounded-xl">Cancelar</button>
+                    <button onclick="saveAssignment()" class="bg-[#224289] text-white text-xs font-bold px-5 py-2 rounded-xl">Guardar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- CONFIGURACIÓN DE SEGURIDAD ---
+        const ADMIN_PASSWORD = "TuClaveSecretaAqui"; // CAMBIA ESTO por la contraseña que tú quieras usar
+        let isAdmin = false;
+
+        // Estructura Inicial de Ramas por Defecto
+        let coreData = {
+            divisionLabel: "Departamentos",
+            divisions: [
+                { id: "div_direccion", name: "Dirección General" },
+                { id: "div_operaciones", name: "Operaciones" },
+                { id: "div_comercial", name: "Equipo Comercial" }
+            ],
+            nodes: {
+                "ceo": { name: "Director Ejecutivo (CEO)", parentId: null, nombre: "Solana Martinez", email: "ceo@empresa.com" },
+                "node_1": { name: "Gerente Operativo", divisionId: "div_operaciones", nombre: "Juan Pérez", email: "ops@empresa.com" },
+                "node_2": { name: "Gerente Comercial", divisionId: "div_comercial", nombre: "Ana Gómez", email: "ventas@empresa.com" }
+            }
+        };
+
+        // --- SISTEMA DE DESPLAZAMIENTO ESTILO GOOGLE MAPS (Pan & Zoom) ---
+        let zoomLevel = 1.0;
+        let panX = 0, panY = 0;
+        let isDragging = false;
+        let startX, startY;
+
+        const container = document.getElementById('tree-container');
+        const canvas = document.getElementById('tree-canvas');
+
+        container.addEventListener('mousedown', (e) => {
+            if (e.target.closest('button') || e.target.closest('input') || e.target.closest('#edit-modal')) return;
+            isDragging = true;
+            startX = e.clientX - panX;
+            startY = e.clientY - panY;
+            container.style.cursor = 'grabbing';
+        });
+
+        window.addEventListener('mousemove', (e) => {
+            if (!isDragging) return;
+            panX = e.clientX - startX;
+            panY = e.clientY - startY;
+            updateCanvasTransform();
+        });
+
+        window.addEventListener('mouseup', () => {
+            isDragging = false;
+            container.style.cursor = 'grab';
+        });
+
+        container.addEventListener('wheel', (e) => {
+            e.preventDefault();
+            adjustZoom(e.deltaY < 0 ? 0.05 : -0.05);
+        });
+
+        function adjustZoom(amount) {
+            zoomLevel = Math.max(0.4, Math.min(2.0, zoomLevel + amount));
+            document.getElementById('zoom-indicator').textContent = `${Math.round(zoomLevel * 100)}%`;
+            updateCanvasTransform();
+        }
+
+        function resetZoomAndPan() {
+            zoomLevel = 1.0; panX = 0; panY = 0;
+            document.getElementById('zoom-indicator').textContent = "100%";
+            updateCanvasTransform();
+        }
+
+        function updateCanvasTransform() {
+            canvas.style.transform = `translate(${panX}px, ${panY}px) scale(${zoomLevel})`;
+        }
+
+        // --- AUTENTICACIÓN Y ROLES ---
+        function promptAdminLogin() {
+            if (isAdmin) {
+                isAdmin = false;
+                document.body.classList.remove('is-admin');
+                document.getElementById('btn-login-status').innerHTML = '<i class="fa-solid fa-lock"></i> Acceso Editor';
+                renderTree();
+                return;
+            }
+            const pass = prompt("Introduce la contraseña de administrador para editar:");
+            if (pass === ADMIN_PASSWORD) {
+                isAdmin = true;
+                document.body.classList.add('is-admin');
+                document.getElementById('btn-login-status').innerHTML = '<i class="fa-solid fa-unlock text-green-500"></i> Modo Editor Activo';
+                renderTree();
+            } else if (pass !== null) {
+                alert("Contraseña incorrecta. Acceso denegado.");
+            }
+        }
+
+        // --- RENDERIZADO DEL ORGANIGRAMA Y DINÁMICAS ---
+        function renderTree() {
+            const content = document.getElementById('dynamic-canvas-content');
+            let html = `<div class="flex flex-col items-center gap-8">`;
+            
+            // Renderizar Nodo Raíz Principal (CEO)
+            const rootKey = Object.keys(coreData.nodes).find(k => coreData.nodes[k].parentId === null);
+            if (rootKey) {
+                const root = coreData.nodes[rootKey];
+                html += `
+                    <div class="bg-white border-2 border-[#224289] p-4 rounded-xl shadow-md text-center min-w-[220px] cursor-pointer" onclick="handleNodeClick('${rootKey}')">
+                        <div class="text-xs font-bold text-[#224289]">${root.name}</div>
+                        <div class="text-sm font-semibold text-slate-800 mt-1">${root.nombre || 'Vacante'}</div>
+                        ${isAdmin ? '<span class="text-[10px] text-amber-600 block mt-1"><i class="fa-solid fa-pen"></i> Editar</span>' : ''}
+                    </div>
+                `;
+            }
+
+            // Renderizar Columnas / Divisiones organizacionales
+            html += `<div class="flex flex-row gap-8 items-start mt-4">`;
+            coreData.divisions.forEach(div => {
+                html += `
+                    <div class="bg-slate-100/80 p-4 rounded-2xl border border-slate-200 min-w-[240px] flex flex-col gap-3">
+                        <div class="flex justify-between items-center border-b border-slate-300 pb-2">
+                            <span class="text-xs font-bold text-slate-700 uppercase tracking-wider">${div.name}</span>
+                            ${isAdmin ? `<button onclick="deleteDivision('${div.id}')" class="text-rose-500 text-xs hover:text-rose-700"><i class="fa-solid fa-trash"></i></button>` : ''}
+                        </div>
+                        <div class="flex flex-col gap-3">
+                `;
+
+                // Filtrar nodos pertenecientes a esta columna
+                Object.keys(coreData.nodes).forEach(key => {
+                    const node = coreData.nodes[key];
+                    if (node.divisionId === div.id) {
+                        html += `
+                            <div class="bg-white p-3 rounded-xl shadow-xs border border-slate-200 hover:border-[#224289] transition cursor-pointer" onclick="handleNodeClick('${key}')">
+                                <div class="text-xs font-bold text-slate-800">${node.name}</div>
+                                <div class="text-xs text-slate-500 mt-0.5">${node.nombre || 'Asignar Personal'}</div>
+                            </div>
+                        `;
+                    }
+                });
+
+                if (isAdmin) {
+                    html += `<button onclick="addNewNodeToDivision('${div.id}')" class="bg-white hover:bg-slate-50 border border-dashed border-slate-300 text-slate-600 text-xs py-2 rounded-xl font-medium">+ Añadir Rama</button>`;
+                }
+
+                html += `</div></div>`;
+            });
+
+            html += `</div></div>`;
+            content.innerHTML = html;
+            renderListTable();
+        }
+
+        // --- GESTIÓN DE NODOS Y RAMAS (AGREGAR / ELIMINAR) ---
+        let activeNodeKey = null;
+
+        function handleNodeClick(key) {
+            if (!isAdmin) {
+                // Modo Visor: Muestra información simple si tiene correo
+                const node = coreData.nodes[key];
+                if (node.email) alert(`Contacto de ${node.name}: ${node.email}`);
+                return;
+            }
+            // Modo Editor: Abre el modal interactivo
+            activeNodeKey = key;
+            const node = coreData.nodes[key];
+            document.getElementById('modal-role-name').value = node.name;
+            document.getElementById('modal-input-nombre').value = node.nombre || '';
+            document.getElementById('modal-input-email').value = node.email || '';
+            document.getElementById('edit-modal').classList.remove('hidden');
+        }
+
+        function closeEditModal() {
+            document.getElementById('edit-modal').classList.add('hidden');
+        }
+
+        function saveAssignment() {
+            if (!activeNodeKey) return;
+            coreData.nodes[activeNodeKey].name = document.getElementById('modal-role-name').value;
+            coreData.nodes[activeNodeKey].nombre = document.getElementById('modal-input-nombre').value;
+            coreData.nodes[activeNodeKey].email = document.getElementById('modal-input-email').value;
+            localStorage.setItem('organigrama_backup', JSON.stringify(coreData));
+            closeEditModal();
+            renderTree();
+        }
+
+        function addNewNodeToDivision(divId) {
+            const name = prompt("Nombre del nuevo Puesto / Rol:");
+            if (!name) return;
+            const newId = "node_" + Date.now();
+            coreData.nodes[newId] = {
+                name: name,
+                divisionId: divId,
+                parentId: "ceo",
+                nombre: "",
+                email: ""
+            };
+            localStorage.setItem('organigrama_backup', JSON.stringify(coreData));
+            renderTree();
+        }
+
+        function deleteCurrentPosition() {
+            if (!activeNodeKey) return;
+            if (coreData.nodes[activeNodeKey].parentId === null) {
+                alert("No puedes eliminar el nodo raíz de la organización.");
+                return;
+            }
+            if (confirm("¿Estás seguro de eliminar esta rama por completo?")) {
+                delete coreData.nodes[activeNodeKey];
+                localStorage.setItem('organigrama_backup', JSON.stringify(coreData));
+                closeEditModal();
+                renderTree();
+            }
+        }
+
+        function addNewDivisionPrompt() {
+            const name = prompt("Nombre de la nueva columna/departamento:");
+            if (!name) return;
+            const newDivId = "div_" + Date.now();
+            coreData.divisions.push({ id: newDivId, name: name });
+            localStorage.setItem('organigrama_backup', JSON.stringify(coreData));
+            renderTree();
+        }
+
+        function deleteDivision(divId) {
+            if (confirm("Al eliminar la columna se desvincularán sus puestos. ¿Proceder?")) {
+                coreData.divisions = coreData.divisions.filter(d => d.id !== divId);
+                Object.keys(coreData.nodes).forEach(k => {
+                    if (coreData.nodes[k].divisionId === divId) delete coreData.nodes[k];
+                });
+                localStorage.setItem('organigrama_backup', JSON.stringify(coreData));
+                renderTree();
+            }
+        }
+
+        // --- EXPORTACIÓN / BACKUP ---
+        function exportToJSON() {
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(coreData, null, 2));
+            const downloadAnchor = document.createElement('a');
+            downloadAnchor.setAttribute("href", dataStr);
+            downloadAnchor.setAttribute("download", "organigrama_backup.json");
+            document.body.appendChild(downloadAnchor);
+            downloadAnchor.click();
+            downloadAnchor.remove();
+        }
+
+        function importFromJSON(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const parsed = JSON.parse(e.target.result);
+                    if (parsed.nodes && parsed.divisions) {
+                        coreData = parsed;
+                        localStorage.setItem('organigrama_backup', JSON.stringify(coreData));
+                        renderTree();
+                        alert("Estructura cargada exitosamente.");
+                    }
+                } catch (err) {
+                    alert("Archivo JSON no válido.");
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        function renderListTable() {
+            const tbody = document.getElementById('table-body');
+            let html = '';
+            Object.keys(coreData.nodes).forEach(k => {
+                const n = coreData.nodes[k];
+                const div = coreData.divisions.find(d => d.id === n.divisionId);
+                html += `
+                    <tr>
+                        <td class="py-3 px-6 font-semibold text-xs text-slate-500">${div ? div.name : 'Estructura Central'}</td>
+                        <td class="py-3 px-6 font-bold text-[#224289]">${n.name}</td>
+                        <td class="py-3 px-6">${n.nombre || '—'}</td>
+                        <td class="py-3 px-6 text-slate-500 text-xs">${n.email || '—'}</td>
+                    </tr>
+                `;
+            });
+            tbody.innerHTML = html;
+        }
+
+        function switchView(view) {
+            if (view === 'chart') {
+                document.getElementById('view-chart').classList.remove('hidden');
+                document.getElementById('view-list').classList.add('hidden');
+            } else {
+                document.getElementById('view-chart').classList.add('hidden');
+                document.getElementById('view-list').classList.remove('hidden');
+            }
+        }
+
+        function handleSearch(query) {
+            query = query.toLowerCase().trim();
+            if(!query) { renderTree(); return; }
+            // Filtrado rápido por coincidencia
+            const items = document.querySelectorAll('#dynamic-canvas-content .cursor-pointer');
+            items.forEach(el => {
+                if(el.textContent.toLowerCase().includes(query)) {
+                    el.classList.add('ring-4', 'ring-yellow-400');
+                } else {
+                    el.classList.remove('ring-4', 'ring-yellow-400');
+                }
+            });
+        }
+
+        // --- CARGA INICIAL ---
+        window.onload = () => {
+            const local = localStorage.getItem('organigrama_backup');
+            if (local) coreData = JSON.parse(local);
+            renderTree();
+            resetZoomAndPan();
+        };
+    </script>
+</body>
+</html>
