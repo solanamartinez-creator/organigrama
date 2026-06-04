@@ -11,16 +11,446 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
-        .canvas-grid { background-size: 24px 24px; background-image: radial-gradient(circle, #cbd5e1 1.2px, transparent 1.2px); }
+        .canvas-grid { 
+            background-size: 24px 24px; 
+            background-image: radial-gradient(circle, #cbd5e1 1.2px, transparent 1.2px); 
+        }
+        /* Scrollbar estilizada y sutil para la navegación horizontal */
+        .custom-scroll::-webkit-scrollbar {
+            height: 10px;
+        }
+        .custom-scroll::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 8px;
+        }
+        .custom-scroll::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 8px;
+        }
+        .custom-scroll::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         .animate-fade-in { animation: fadeIn 0.3s ease-out forwards; }
     </style>
 </head>
 <body class="min-h-screen flex flex-col overflow-x-hidden" onload="initOrganigrama()">
 
+    <!-- Barra de Herramientas Estabilizada -->
     <section class="bg-white border-b border-slate-200 py-3.5 px-6 shadow-sm sticky top-0 z-30">
         <div class="max-w-[1700px] mx-auto flex flex-col lg:flex-row justify-between items-center gap-4">
             
             <div class="flex flex-col md:flex-row items-center gap-4 w-full lg:w-auto">
                 <div class="flex bg-slate-100 p-1 rounded-xl w-full md:w-auto">
                     <button id="tab-chart" onclick="switchView('chart')" class="flex-1 md:flex-none py-2 px-4 rounded-lg text-sm font-semibold bg-white text-[#224289] shadow-sm">
+                        <i class="fa-solid fa-sitemap"></i> Vista de Árbol
+                    </button>
+                    <button id="tab-list" onclick="switchView('list')" class="flex-1 md:flex-none py-2 px-4 rounded-lg text-sm font-semibold text-slate-600">
+                        <i class="fa-solid fa-table-list"></i> Vista de Planilla / Búsqueda
+                    </button>
+                </div>
+                <button onclick="solicitarAccesoAdmin()" class="text-xs text-slate-400 hover:text-[#224289] font-medium transition">
+                    <i class="fa-solid fa-lock"></i> Acceso Admin
+                </button>
+            </div>
+
+            <!-- Panel de Acciones Dinámico -->
+            <div class="flex flex-wrap items-center justify-center gap-2 w-full lg:w-auto">
+                <div id="panel-admin-botones" class="hidden flex gap-2">
+                    <button onclick="abrirModalNuevoPuesto()" class="bg-[#11caa0] hover:bg-[#0ea885] text-white text-xs font-bold py-2 px-3.5 rounded-lg flex items-center gap-2 shadow-sm">
+                        <i class="fa-solid fa-plus"></i> Añadir Puesto
+                    </button>
+                    <button onclick="guardarCambiosEstructura()" class="bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold py-2 px-3.5 rounded-lg flex items-center gap-2 shadow-sm animate-bounce">
+                        <i class="fa-solid fa-floppy-disk"></i> Guardar Cambios en GitHub
+                    </button>
+                </div>
+
+                <button onclick="exportToCSV()" class="bg-[#224289] hover:bg-[#152e66] text-white text-xs font-bold py-2 px-3.5 rounded-lg flex items-center gap-2 shadow-sm">
+                    <i class="fa-solid fa-file-excel"></i> Descargar Excel
+                </button>
+                <div id="badge-rol" class="bg-indigo-50 border border-indigo-200 text-indigo-700 text-xs px-3 py-2 rounded-lg font-medium">
+                    <i class="fa-solid fa-eye"></i> Vista Pública (Solo Lectura)
+                </div>
+            </div>
+
+            <div class="relative w-full lg:w-72">
+                <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400"><i class="fa-solid fa-magnifying-glass"></i></span>
+                <input type="text" id="search-input" oninput="handleSearch(this.value)" placeholder="Buscar puesto o personal..." class="w-full bg-slate-50 border border-slate-200 rounded-xl py-2 pl-10 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-[#224289]">
+            </div>
+        </div>
+    </section>
+
+    <!-- Contenido Principal con Scroll Horizontal Habilitado -->
+    <main class="flex-1 p-6 w-full flex flex-col">
+        
+        <!-- Contenedor del Lienzo con Scrollbar Customizada -->
+        <div id="view-chart" class="flex-1 bg-slate-50 rounded-3xl border border-slate-200 shadow-inner p-6 min-h-[650px] canvas-grid overflow-x-auto custom-scroll flex items-start justify-start">
+            <div id="dynamic-canvas-content" class="min-w-full flex flex-col items-center gap-4 animate-fade-in py-4 px-8">
+                <!-- El árbol se dibuja acá dinámicamente -->
+            </div>
+        </div>
+
+        <!-- Vista de Planilla Oculta por Defecto -->
+        <div id="view-list" class="hidden bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-md">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-slate-50 border-b border-slate-200 text-xs font-bold text-slate-500 uppercase tracking-wider">
+                            <th class="py-4 px-6">Ubicación / Área</th>
+                            <th class="py-4 px-6">Nombre del Puesto / Rol</th>
+                            <th class="py-4 px-6">Apellido y Nombre</th>
+                            <th class="py-4 px-6">Email Institucional</th>
+                            <th id="th-acciones" class="py-4 px-6 hidden">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="table-body" class="divide-y divide-slate-100 text-sm text-slate-700"></tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <!-- Modal Formulario de Edición / Creación -->
+    <div id="modal-puesto" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center z-50">
+        <div class="bg-white p-6 rounded-2xl border border-slate-200 w-full max-w-md shadow-xl animate-fade-in">
+            <h3 id="modal-titulo" class="text-base font-bold text-slate-900 mb-4">Editar Puesto</h3>
+            <input type="hidden" id="form-node-id">
+            <div class="space-y-3">
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Nombre del Puesto</label>
+                    <input type="text" id="form-puesto-name" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#224289]">
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Apellido</label>
+                        <input type="text" id="form-puesto-apellido" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#224289]">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Nombre</label>
+                        <input type="text" id="form-puesto-nombre" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#224289]">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Email Institucional</label>
+                    <input type="email" id="form-puesto-email" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#224289]">
+                </div>
+                <div id="form-group-division" class="hidden">
+                    <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Columna / Ubicación</label>
+                    <select id="form-puesto-division" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#224289]">
+                        <option value="div_delegados">Sedes / Delegados</option>
+                        <option value="div_secretarias">Secretarías</option>
+                        <option value="div_facultades">Facultades</option>
+                        <option value="div_institutos">Institutos</option>
+                        <option value="div_laboratorios">Laboratorios</option>
+                        <option value="div_areas">Áreas Transversales</option>
+                    </select>
+                </div>
+            </div>
+            <div class="flex gap-2 mt-6 justify-end">
+                <button onclick="cerrarModal()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold py-2 px-4 rounded-xl">Cancelar</button>
+                <button onclick="guardarFormulario()" class="bg-[#224289] hover:bg-[#152e66] text-white text-xs font-bold py-2 px-4 rounded-xl">Aplicar Cambios Locales</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Script de Datos y Controladores -->
+    <script>
+        let isAdmin = false;
+        
+        // Base de datos sincronizada con los nombres reales de tu captura de pantalla
+        let generalStructure = {
+            divisions: [
+                { id: "div_delegados", name: "Sedes / Delegados" },
+                { id: "div_secretarias", name: "Secretarías" },
+                { id: "div_facultades", name: "Facultades" },
+                { id: "div_institutos", name: "Institutos" },
+                { id: "div_laboratorios", name: "Laboratorios" },
+                { id: "div_areas", name: "Áreas Transversales" }
+            ],
+            nodes: {
+                "consejo_superior": { name: "Consejo Superior", apellido: "", nombre: "", email: "" },
+                "rectorado": { name: "Rectorado (Rector/Vicerrector)", apellido: "Silva", nombre: "Eduardo", email: "esilva@atlantida.edu.ar" },
+                
+                "del_mdp": { name: "Sede Mar del Plata", divisionId: "div_delegados", apellido: "Rossi", nombre: "Carolina", email: "crossi@atlantida.edu.ar" },
+                "del_dolores": { name: "Sede Dolores", divisionId: "div_delegados", apellido: "Álvarez", nombre: "Fernando", email: "falvarez@atlantida.edu.ar" },
+                "del_ajo": { name: "Sede Mar de Ajó", divisionId: "div_delegados", apellido: "Sánz", nombre: "Alicia", email: "asanz@atlantida.edu.ar" },
+                "del_caba": { name: "Sede CABA", divisionId: "div_delegados", apellido: "", nombre: "", email: "" },
+                "del_distancia": { name: "Sede Distancia", divisionId: "div_delegados", apellido: "", nombre: "", email: "" },
+                
+                "sec_academica": { name: "Secretaría Académica", divisionId: "div_secretarias", apellido: "Benítez", nombre: "Sofía", email: "sbenitez@atlantida.edu.ar" },
+                "sec_investigacion": { name: "Secretaría de Investigación", divisionId: "div_secretarias", apellido: "López", nombre: "Carlos", email: "clopez@atlantida.edu.ar" },
+                "sec_extension": { name: "Secretaría de Extensión", divisionId: "div_secretarias", apellido: "", nombre: "", email: "" },
+                "sec_administrativa": { name: "Secretaría Administrativa", divisionId: "div_secretarias", apellido: "", nombre: "", email: "" },
+                "sec_articulacion": { name: "Articulación y Promoción", divisionId: "div_secretarias", apellido: "", nombre: "", email: "" },
+                
+                "fac_ingenieria": { name: "Facultad de Ingeniería", divisionId: "div_facultades", apellido: "Gómez", nombre: "Raúl", email: "rgomez@atlantida.edu.ar" },
+                "fac_derecho": { name: "Facultad de Derecho y Cs. Sociales", divisionId: "div_facultades", apellido: "Fernández", nombre: "María", email: "mfernandez@atlantida.edu.ar" },
+                "fac_humanidades": { name: "Facultad de Humanidades", divisionId: "div_facultades", apellido: "", nombre: "", email: "" },
+                "fac_economicas": { name: "Facultad de Cs. Económicas", divisionId: "div_facultades", apellido: "", nombre: "", email: "" },
+                "fac_psicologia": { name: "Facultad de Psicología", divisionId: "div_facultades", apellido: "", nombre: "", email: "" },
+                "fac_arquitectura": { name: "Facultad de Arquitectura, Urbanismo y Diseño", divisionId: "div_facultades", apellido: "", nombre: "", email: "" },
+                
+                "inst_iecam": { name: "IECAM (Econ. Colaborativa y Acción Mutual)", divisionId: "div_institutos", apellido: "", nombre: "", email: "" },
+                "inst_ddhh": { name: "IDDHH (Derechos Humanos)", divisionId: "div_institutos", apellido: "", nombre: "", email: "" },
+                "inst_ilel": { name: "Ilel (Infancias e Instituciones)", divisionId: "div_institutos", apellido: "", nombre: "", email: "" },
+                "inst_ieg": { name: "IEG (Estudios Gerontológicos)", divisionId: "div_institutos", apellido: "", nombre: "", email: "" },
+                "inst_ide": { name: "IdE (Estadísticas)", divisionId: "div_institutos", apellido: "", nombre: "", email: "" },
+                "inst_iead": { name: "IEAD (Educación a Distancia)", divisionId: "div_institutos", apellido: "", nombre: "", email: "" },
+                "inst_isi": { name: "ISI (Sistemas Inteligentes)", divisionId: "div_institutos", apellido: "", nombre: "", email: "" },
+                "inst_iec": { name: "IEC (Economía Circular)", divisionId: "div_institutos", apellido: "", nombre: "", email: "" },
+                
+                "lab_ia": { name: "Laboratorio de Inteligencias Artificiales", divisionId: "div_laboratorios", apellido: "", nombre: "", email: "" },
+                "lab_futuros": { name: "Laboratorio de Futuros Atlántida (LFA)", divisionId: "div_laboratorios", apellido: "", nombre: "" , email: "" },
+                
+                "area_personas": { name: "Gestión de las Personas (RRHH)", divisionId: "div_areas", apellido: "", nombre: "", email: "" },
+                "area_informatica": { name: "Área de Informática", divisionId: "div_areas", apellido: "", nombre: "", email: "" },
+                "area_sistemas": { name: "Área de Sistemas", divisionId: "div_areas", apellido: "", nombre: "", email: "" },
+                "area_infraestructura": { name: "Área de Infraestructura", divisionId: "div_areas", apellido: "", nombre: "", email: "" },
+                "area_internacionalizacion": { name: "Área de Internacionalización", divisionId: "div_areas", apellido: "", nombre: "", email: "" },
+                "area_comunicacion": { name: "Área de Comunicación", divisionId: "div_areas", apellido: "", nombre: "", email: "" },
+                "area_cpaca": { name: "CPACA (Autoevaluación y Calidad Académica)", divisionId: "div_areas", apellido: "", nombre: "", email: "" }
+            }
+        };
+
+        function initOrganigrama() {
+            renderTree();
+            renderTable(Object.keys(generalStructure.nodes));
+        }
+
+        function solicitarAccesoAdmin() {
+            const password = prompt("Ingrese la clave de administradora para editar:");
+            if (password === "atlantida2026") {
+                isAdmin = true;
+                document.getElementById('panel-admin-botones').classList.remove('hidden');
+                document.getElementById('th-acciones').classList.remove('hidden');
+                
+                const badge = document.getElementById('badge-rol');
+                badge.className = "bg-amber-50 border border-amber-200 text-amber-700 text-xs px-3 py-2 rounded-lg font-bold";
+                badge.innerHTML = `<i class="fa-solid fa-pen-to-square"></i> Modo Editor Activado`;
+                
+                alert("¡Acceso concedido! Ahora podés hacer clic sobre cualquier celda para cargar el personal correspondiente.");
+                renderTree();
+                renderTable(Object.keys(generalStructure.nodes));
+            } else {
+                alert("Clave incorrecta. Acceso denegado.");
+            }
+        }
+
+        function renderTree() {
+            const content = document.getElementById('dynamic-canvas-content');
+            const root = generalStructure.nodes["consejo_superior"];
+            const rector = generalStructure.nodes["rectorado"];
+
+            // Maquetación en hilera extendida (Fila única con scrollbar abajo)
+            let html = `
+                <div class="flex flex-col items-center w-auto">
+                    ${createCardHTML("consejo_superior", root)}
+                    <div class="w-0.5 h-6 bg-[#224289] my-1"></div>
+                    ${createCardHTML("rectorado", rector)}
+                    <div class="w-0.5 h-6 bg-[#224289] my-1"></div>
+                    
+                    <!-- Fila horizontal infinita de columnas -->
+                    <div class="flex flex-row items-start gap-6 mt-4 px-4 whitespace-nowrap">
+            `;
+
+            generalStructure.divisions.forEach(div => {
+                html += `
+                    <div class="flex flex-col bg-slate-100/80 p-4 rounded-2xl border border-slate-200 w-[290px] inline-block vertical-align-top gap-3 shadow-xs whitespace-normal">
+                        <div class="text-center font-bold text-xs text-[#224289] uppercase tracking-wider pb-2 border-b border-slate-200 mb-3">${div.name}</div>
+                `;
+
+                Object.keys(generalStructure.nodes).forEach(id => {
+                    const node = generalStructure.nodes[id];
+                    if (node.divisionId === div.id) {
+                        html += createCardHTML(id, node);
+                    }
+                });
+
+                html += `</div>`;
+            });
+
+            html += `</div></div>`;
+            content.innerHTML = html;
+        }
+
+        function createCardHTML(id, node) {
+            const cursorClass = isAdmin ? "cursor-pointer border-amber-300 hover:bg-amber-50/50" : "";
+            const adminIndicator = isAdmin ? `<div class="text-[9px] text-amber-600 font-bold mt-2 text-right"><i class="fa-solid fa-pen"></i> Editar</div>` : "";
+            
+            let personalDisplay = (node.apellido || node.nombre) ? `${node.apellido}, ${node.nombre}` : "Vacante / Sin asignar";
+            let textColor = (node.apellido || node.nombre) ? "text-[#224289]" : "text-slate-400 italic";
+            let emailDisplay = node.email ? node.email : "Sin correo";
+
+            return `
+                <div onclick="abrirModalEditar('${id}')" class="bg-white border border-slate-200 p-4 rounded-xl shadow-sm w-full transition hover:shadow-md mb-3 ${cursorClass}">
+                    <h4 class="text-xs font-bold text-slate-700">${node.name}</h4>
+                    <p class="text-sm font-bold ${textColor} mt-1">${personalDisplay}</p>
+                    <p class="text-[10px] text-slate-400 truncate mt-0.5">${emailDisplay}</p>
+                    ${adminIndicator}
+                </div>
+            `;
+        }
+
+        function abrirModalEditar(id) {
+            if (!isAdmin) return;
+            const node = generalStructure.nodes[id];
+            
+            document.getElementById('modal-titulo').innerText = "Editar Puesto";
+            document.getElementById('form-node-id').value = id;
+            document.getElementById('form-puesto-name').value = node.name;
+            document.getElementById('form-puesto-apellido').value = node.apellido || "";
+            document.getElementById('form-puesto-nombre').value = node.nombre || "";
+            document.getElementById('form-puesto-email').value = node.email || "";
+            document.getElementById('form-group-division').classList.add('hidden');
+            
+            document.getElementById('modal-puesto').classList.remove('hidden');
+        }
+
+        function abrirModalNuevoPuesto() {
+            document.getElementById('modal-titulo').innerText = "Añadir Nuevo Puesto";
+            document.getElementById('form-node-id').value = "";
+            document.getElementById('form-puesto-name').value = "";
+            document.getElementById('form-puesto-apellido').value = "";
+            document.getElementById('form-puesto-nombre').value = "";
+            document.getElementById('form-puesto-email').value = "";
+            document.getElementById('form-group-division').classList.remove('hidden');
+            
+            document.getElementById('modal-puesto').classList.remove('hidden');
+        }
+
+        function cerrarModal() {
+            document.getElementById('modal-puesto').classList.add('hidden');
+        }
+
+        function guardarFormulario() {
+            const id = document.getElementById('form-node-id').value;
+            const name = document.getElementById('form-puesto-name').value;
+            const apellido = document.getElementById('form-puesto-apellido').value;
+            const nombre = document.getElementById('form-puesto-nombre').value;
+            const email = document.getElementById('form-puesto-email').value;
+
+            if (id) {
+                generalStructure.nodes[id].name = name;
+                generalStructure.nodes[id].apellido = apellido;
+                generalStructure.nodes[id].nombre = nombre;
+                generalStructure.nodes[id].email = email;
+            } else {
+                const nuevoId = "node_" + Date.now();
+                const divId = document.getElementById('form-puesto-division').value;
+                generalStructure.nodes[nuevoId] = {
+                    name: name,
+                    divisionId: divId,
+                    apellido: apellido,
+                    nombre: nombre,
+                    email: email
+                };
+            }
+
+            cerrarModal();
+            renderTree();
+            renderTable(Object.keys(generalStructure.nodes));
+        }
+
+        function eliminarPuesto(id) {
+            if (confirm("¿Estás segura de que querés eliminar este puesto?")) {
+                delete generalStructure.nodes[id];
+                renderTree();
+                renderTable(Object.keys(generalStructure.nodes));
+            }
+        }
+
+        function guardarCambiosEstructura() {
+            const scriptActual = "<!DOCTYPE html>\n" + document.documentElement.outerHTML;
+            const blob = new Blob([scriptActual], { type: 'text/html;charset=utf-8;' });
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.setAttribute("download", "web.html");
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            alert("¡Se generó el archivo 'web.html'!\n\nReemplazalo en tu repositorio de GitHub para guardar los cambios de forma permanente.");
+        }
+
+        function renderTable(nodeIds) {
+            const tbody = document.getElementById('table-body');
+            tbody.innerHTML = '';
+
+            nodeIds.forEach(id => {
+                const node = generalStructure.nodes[id];
+                let location = "Nivel Central";
+                if (node.divisionId) {
+                    const div = generalStructure.divisions.find(d => d.id === node.divisionId);
+                    if (div) location = div.name;
+                }
+
+                let btnEliminar = isAdmin ? `<td class="py-3 px-6 text-right"><button onclick="eliminarPuesto('${id}')" class="text-red-500 hover:text-red-700 font-bold text-xs"><i class="fa-solid fa-trash"></i></button></td>` : `<td class="py-3 px-6"></td>`;
+                let personalDisplay = (node.apellido || node.nombre) ? `${node.apellido}, ${node.nombre}` : "Vacante";
+
+                tbody.innerHTML += `
+                    <tr class="hover:bg-slate-50 border-b border-slate-100">
+                        <td class="py-3 px-6 text-slate-500 text-xs font-medium">${location}</td>
+                        <td class="py-3 px-6 font-bold text-slate-800 text-xs">${node.name}</td>
+                        <td class="py-3 px-3.5 text-sm font-semibold text-[#224289]">${personalDisplay}</td>
+                        <td class="py-3 px-6 text-xs text-slate-500">${node.email || "-"}</td>
+                        ${btnEliminar}
+                    </tr>
+                `;
+            });
+        }
+
+        function switchView(view) {
+            const chartTab = document.getElementById('tab-chart');
+            const listTab = document.getElementById('tab-list');
+            const chartView = document.getElementById('view-chart');
+            const listView = document.getElementById('view-list');
+
+            if (view === 'chart') {
+                chartView.classList.remove('hidden');
+                listView.classList.add('hidden');
+                chartTab.className = "flex-1 md:flex-none py-2 px-4 rounded-lg text-sm font-semibold bg-white text-[#224289] shadow-sm";
+                listTab.className = "flex-1 md:flex-none py-2 px-4 rounded-lg text-sm font-semibold text-slate-600";
+            } else {
+                chartView.classList.add('hidden');
+                listView.classList.remove('hidden');
+                listTab.className = "flex-1 md:flex-none py-2 px-4 rounded-lg text-sm font-semibold bg-white text-[#224289] shadow-sm";
+                chartTab.className = "flex-1 md:flex-none py-2 px-4 rounded-lg text-sm font-semibold text-slate-600";
+            }
+        }
+
+        function handleSearch(query) {
+            if (!query.trim()) {
+                renderTable(Object.keys(generalStructure.nodes));
+                return;
+            }
+            const filteredIds = Object.keys(generalStructure.nodes).filter(id => {
+                const node = generalStructure.nodes[id];
+                return node.name.toLowerCase().includes(query.toLowerCase()) || 
+                       ((node.nombre || '') + ' ' + (node.apellido || '')).toLowerCase().includes(query.toLowerCase());
+            });
+            switchView('list');
+            renderTable(filteredIds);
+        }
+
+        function exportToCSV() {
+            let csv = "\uFEFFUbicación;Puesto;Personal;Email\n";
+            Object.keys(generalStructure.nodes).forEach(id => {
+                const node = generalStructure.nodes[id];
+                let location = "Nivel Central";
+                if (node.divisionId) {
+                    const div = generalStructure.divisions.find(d => d.id === node.divisionId);
+                    if (div) location = div.name;
+                }
+                let pers = (node.apellido || node.nombre) ? `${node.apellido}, ${node.nombre}` : "Vacante";
+                csv += `"${location}";"${node.name}";"${pers}";"${node.email || ''}"\n`;
+            });
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.setAttribute("download", "organigrama_universidad.csv");
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+    </script>
+</body>
+</html>
